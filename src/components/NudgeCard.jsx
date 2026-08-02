@@ -1,0 +1,89 @@
+import { colorVar, unitFor, formatAmount, unitWord } from '../lib/model.js'
+import { explainNudge, suggestedAction } from '../lib/nudge.js'
+import { relativeDays } from '../lib/date.js'
+
+export default function NudgeCard({ pick, ranked, settings, onLog, onOpen, onCycle, cycled }) {
+  if (!pick) {
+    return (
+      <div className="nudge" style={{ '--goal-color': 'var(--good)' }}>
+        <div className="nudge-inner">
+          <div className="nudge-body">
+            <div className="nudge-eyebrow">✓ All caught up</div>
+            <h2 className="nudge-title">Everything's moving</h2>
+            <p className="nudge-reason">
+              Every goal has been touched recently and is tracking near its target. Nothing is
+              being quietly forgotten — check back tomorrow.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const { goal, stats } = pick
+  const unit = unitFor(goal)
+  const { lead, detail } = explainNudge(pick, settings)
+  const color = colorVar(goal.colorSlot)
+  const others = ranked.filter((r) => r.goal.id !== goal.id).slice(0, 3)
+
+  return (
+    <div className="nudge" style={{ '--goal-color': color }}>
+      <div className="nudge-inner">
+        <div className="nudge-body">
+          <div className="nudge-eyebrow">
+            <span aria-hidden="true">{pick.fresh ? '🌱' : '👋'}</span>
+            {pick.fresh ? 'Start here' : cycled ? 'Also needs you' : 'Your nudge today'}
+          </div>
+
+          <h1 className="nudge-title">
+            <span aria-hidden="true">{goal.emoji}</span>
+            {goal.name}
+          </h1>
+
+          <p className="nudge-reason">
+            <strong style={{ fontWeight: 600 }}>{lead}</strong>{' '}
+            {detail}.{goal.why ? ` You said: “${goal.why}”` : ''}
+          </p>
+
+          <div className="nudge-facts">
+            <div className="nudge-fact">
+              <div className="k">Last logged</div>
+              <div className="v">{relativeDays(stats.daysSince)}</div>
+            </div>
+            {stats.target > 0 && (
+              <div className="nudge-fact">
+                <div className="k">Last {stats.periodLength} days</div>
+                <div className="v">
+                  {formatAmount(stats.rolling, unit)}
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 550 }}>
+                    {' '}/ {formatAmount(stats.target, unit)} {unit.abbr || unitWord(stats.target, unit)}
+                  </span>
+                </div>
+              </div>
+            )}
+            <div className="nudge-fact">
+              <div className="k">Streak</div>
+              <div className="v">{stats.streak} {stats.streak === 1 ? 'day' : 'days'}</div>
+            </div>
+          </div>
+
+          <div className="nudge-actions">
+            <button className="btn btn-primary" onClick={() => onLog(goal.id)}>
+              Log {goal.name}
+            </button>
+            <button className="btn" onClick={() => onOpen(goal.id)}>See progress</button>
+            {others.length > 0 && (
+              <button className="btn btn-ghost" onClick={onCycle}>
+                {cycled ? 'Back to top nudge' : 'Nudge me about something else'}
+              </button>
+            )}
+          </div>
+
+          <p className="hint" style={{ marginTop: 12 }}>
+            {suggestedAction(goal, stats)}.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
