@@ -1,7 +1,7 @@
 /* localStorage persistence. Everything lives on this machine — no account,
    no network. Export/import gives you a portable JSON backup. */
 
-import { DEFAULT_SETTINGS } from './model.js'
+import { DEFAULT_SETTINGS, migrateGoal } from './model.js'
 
 const KEY = 'nudgenow:v1'
 
@@ -13,7 +13,7 @@ export function load() {
     if (!raw) return { ...EMPTY }
     const parsed = JSON.parse(raw)
     return {
-      goals: Array.isArray(parsed.goals) ? parsed.goals : [],
+      goals: Array.isArray(parsed.goals) ? parsed.goals.map(migrateGoal) : [],
       entries: Array.isArray(parsed.entries) ? parsed.entries : [],
       settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
     }
@@ -49,7 +49,7 @@ export function parseImport(text) {
     throw new Error('That file does not look like a NudgeNow backup.')
   }
   return {
-    goals: parsed.goals,
+    goals: parsed.goals.map(migrateGoal),
     entries: parsed.entries,
     settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
   }

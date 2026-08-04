@@ -1,14 +1,23 @@
 import { useMemo, useState } from 'react'
 import Heatmap from '../components/Heatmap.jsx'
 import ProgressChart from '../components/ProgressChart.jsx'
-import { colorVar, unitFor, formatAmount, unitWord } from '../lib/model.js'
-import { goalStats } from '../lib/stats.js'
+import {
+  colorVar, unitFor, formatAmount, unitWord, normaliseCategory,
+  STATUS, statusOf, revisitLabel,
+} from '../lib/model.js'
+import { goalStats, revisitStatus } from '../lib/stats.js'
 import { formatShort, relativeDays, todayKey } from '../lib/date.js'
 
-export default function GoalDetail({ goal, entries, days, settings, onEdit, onLog, onDeleteEntry, onBack }) {
+export default function GoalDetail({
+  goal, entries, days, settings,
+  onEdit, onLog, onDeleteEntry, onBack, onComplete, onRevisit, onReactivate,
+}) {
   const unit = unitFor(goal)
   const color = colorVar(goal.colorSlot)
   const stats = useMemo(() => goalStats(goal, days, settings, todayKey()), [goal, days, settings])
+  const status = statusOf(goal)
+  const revisit = status === STATUS.REVISIT ? revisitStatus(goal, stats) : null
+  const finishedOn = goal.completedAt ? formatShort(goal.completedAt.slice(0, 10)) : null
 
   const [showAll, setShowAll] = useState(false)
   const all = useMemo(
@@ -30,21 +39,75 @@ export default function GoalDetail({ goal, entries, days, settings, onEdit, onLo
             {goal.emoji}
           </span>
           <div style={{ minWidth: 0 }}>
-            <h1 className="page-title">{goal.name}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <h1 className="page-title">{goal.name}</h1>
+              {normaliseCategory(goal.category) && (
+                <span className="chip" style={{ '--goal-color': color }}>
+                  <span className="dot" />
+                  {normaliseCategory(goal.category)}
+                </span>
+              )}
+              {status === STATUS.REVISIT && <span className="badge">🔁 Revisit</span>}
+              {status === STATUS.DONE && <span className="badge">📦 Archived</span>}
+            </div>
             <p className="page-sub">
-              {stats.target > 0
-                ? `Target ${formatAmount(stats.target, unit)} ${unitWord(stats.target, unit)} per ${goal.cadence}`
-                : `Measured in ${unit.many} · no target set`}
+              {status === STATUS.ACTIVE
+                ? stats.target > 0
+                  ? `Target ${formatAmount(stats.target, unit)} ${unitWord(stats.target, unit)} per ${goal.cadence}`
+                  : `Measured in ${unit.many} · no target set`
+                : status === STATUS.REVISIT
+                  ? `Practised ${revisitLabel(revisit.every).toLowerCase()} · no target to chase`
+                  : `Finished${finishedOn ? ` ${finishedOn}` : ''} · kept for the record`}
               {goal.why ? ` · ${goal.why}` : ''}
             </p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="btn" onClick={onBack}>← All goals</button>
           <button className="btn" onClick={() => onEdit(goal)}>Edit</button>
-          <button className="btn btn-primary" onClick={() => onLog(goal.id)}>+ Log progress</button>
+          {status === STATUS.ACTIVE && (
+            <button className="btn" onClick={() => onComplete(goal)}>✓ Mark complete</button>
+          )}
+          {status === STATUS.DONE ? (
+            <button className="btn btn-primary" onClick={() => onReactivate(goal.id)}>Reactivate</button>
+          ) : (
+            <button className="btn btn-primary" onClick={() => onLog(goal.id)}>
+              {status === STATUS.REVISIT ? '+ Log practice' : '+ Log progress'}
+            </button>
+          )}
         </div>
       </div>
+
+      {status !== STATUS.ACTIVE && (
+        <div className={`status-banner${status === STATUS.REVISIT && revisit.due ? ' is-due' : ''}`}>
+          <div>
+            <div className="t">
+              {status === STATUS.REVISIT
+                ? revisit.due
+                  ? revisit.overdue > 0
+                    ? `Due for a refresher — ${revisit.overdue} ${revisit.overdue === 1 ? 'day' : 'days'} past its check-in`
+                    : 'Due for a refresher today'
+                  : `Next nudge in ${revisit.dueIn} ${revisit.dueIn === 1 ? 'day' : 'days'}`
+                : `Archived${finishedOn ? ` on ${finishedOn}` : ''}`}
+            </div>
+            <div className="s">
+              {status === STATUS.REVISIT
+                ? `Completed${finishedOn ? ` ${finishedOn}` : ''} · nudged ${revisitLabel(revisit.every).toLowerCase()} so it doesn’t fade`
+                : 'Out of the nudge entirely. Its history is kept in full.'}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
+            {status === STATUS.REVISIT ? (
+              <>
+                <button className="btn btn-sm" onClick={() => onEdit(goal)}>Change interval</button>
+                <button className="btn btn-sm" onClick={() => onReactivate(goal.id)}>Back to active</button>
+              </>
+            ) : (
+              <button className="btn btn-sm" onClick={() => onRevisit(goal)}>Move to revisit</button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="kpi-row">
         <div className="stat">
@@ -79,7 +142,21 @@ export default function GoalDetail({ goal, entries, days, settings, onEdit, onLo
         </div>
       </div>
 
-      {stats.target > 0 && (
+      {status === STATUS.REVISIT && (
+        <div className="card" style={{ marginBottom: 14, '--goal-color': color }}>
+          <div className="meter-row">
+            <span>
+              Day {Math.min(revisit.elapsed, revisit.every)} of a {revisit.every}-day revisit cycle
+            </span>
+            <b>{revisit.due ? 'due now' : `${revisit.dueIn} to go`}</b>
+          </div>
+          <div className="meter meter-quiet">
+            <i style={{ width: `${Math.round(revisit.pct * 100)}%` }} />
+          </div>
+        </div>
+      )}
+
+      {status === STATUS.ACTIVE && stats.target > 0 && (
         <div className="card" style={{ marginBottom: 14, '--goal-color': color }}>
           <div className="meter-row">
             <span>
@@ -109,7 +186,11 @@ export default function GoalDetail({ goal, entries, days, settings, onEdit, onLo
           <div className="card-head">
             <div>
               <div className="card-title">Consistency</div>
-              <div className="card-sub">Darker means a bigger day — click any square to log it</div>
+              <div className="card-sub">
+              {status === STATUS.DONE
+                ? 'Darker means a bigger day — the full record, kept as it was'
+                : 'Darker means a bigger day — click any square to log it'}
+            </div>
             </div>
           </div>
           <Heatmap
@@ -119,7 +200,7 @@ export default function GoalDetail({ goal, entries, days, settings, onEdit, onLo
             weeks={settings.heatmapWeeks}
             weekStart={settings.weekStart}
             label={goal.name}
-            onSelectDay={(date) => onLog(goal.id, date)}
+            onSelectDay={status === STATUS.DONE ? undefined : (date) => onLog(goal.id, date)}
           />
         </div>
 

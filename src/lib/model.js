@@ -32,6 +32,110 @@ export const UNIT_PRESETS = [
   { id: 'custom',   label: 'Custom…',   one: 'unit',    many: 'units',    abbr: '',     step: 1,   precision: 0 },
 ]
 
+/* Categories are free text — these are only starting suggestions. A goal with
+   no category isn't broken; it just lands in "Uncategorised" at the bottom.
+   Categories organise the UI only: the nudge scores every goal globally, so
+   filing things away can't hide one from you. */
+export const CATEGORY_SUGGESTIONS = ['Learning', 'Health', 'Creative', 'Career', 'Personal']
+
+export const UNCATEGORISED = ''
+export const categoryLabel = (c) => (c && c.trim()) || 'Uncategorised'
+
+export const normaliseCategory = (c) => (c || '').trim()
+
+/** Distinct categories in use, alphabetical, with uncategorised always last. */
+export function categoryList(goals) {
+  const named = new Set()
+  let hasBlank = false
+  for (const g of goals) {
+    const c = normaliseCategory(g.category)
+    if (c) named.add(c)
+    else hasBlank = true
+  }
+  const out = [...named].sort((a, b) => a.localeCompare(b))
+  if (hasBlank) out.push(UNCATEGORISED)
+  return out
+}
+
+/** [[category, items], …] in display order. `pick` maps an item to its goal. */
+export function groupByCategory(items, pick = (x) => x) {
+  const map = new Map()
+  for (const item of items) {
+    const c = normaliseCategory(pick(item).category)
+    if (!map.has(c)) map.set(c, [])
+    map.get(c).push(item)
+  }
+  return [...map.entries()].sort(([a], [b]) =>
+    a === UNCATEGORISED ? 1 : b === UNCATEGORISED ? -1 : a.localeCompare(b),
+  )
+}
+
+/* ------------------------------------------------------------- lifecycle */
+
+/* A goal is in one of three states:
+
+     active   — the everyday state; nudged on recency + deficit.
+     revisit  — finished, but kept warm. It leaves the target treadmill and is
+                nudged only when its revisit interval has elapsed, so a skill
+                you worked for doesn't quietly fade.
+     done     — finished and filed away. Never nudged, never counted.
+
+   `archived` is kept in sync with `done` so older backups (and any export read
+   by an older build) still round-trip. */
+export const STATUS = { ACTIVE: 'active', REVISIT: 'revisit', DONE: 'done' }
+
+export const REVISIT_PRESETS = [
+  { days: 7,   label: 'Weekly' },
+  { days: 14,  label: 'Every 2 weeks' },
+  { days: 30,  label: 'Monthly' },
+  { days: 60,  label: 'Every 2 months' },
+  { days: 90,  label: 'Quarterly' },
+  { days: 180, label: 'Twice a year' },
+]
+
+export const DEFAULT_REVISIT_EVERY = 30
+
+/** Tolerant of goals written before statuses existed. */
+export function statusOf(goal) {
+  const s = goal?.status
+  if (s === STATUS.ACTIVE || s === STATUS.REVISIT || s === STATUS.DONE) return s
+  return goal?.archived ? STATUS.DONE : STATUS.ACTIVE
+}
+
+export const isActive = (g) => statusOf(g) === STATUS.ACTIVE
+export const isRevisit = (g) => statusOf(g) === STATUS.REVISIT
+export const isDone = (g) => statusOf(g) === STATUS.DONE
+/** Still gets nudged: active goals and goals kept warm on a revisit interval. */
+export const inPlay = (g) => statusOf(g) !== STATUS.DONE
+
+export const revisitEvery = (g) =>
+  Math.max(1, Math.round(Number(g?.revisitEvery) || DEFAULT_REVISIT_EVERY))
+
+export const STATUS_LABELS = {
+  [STATUS.ACTIVE]: 'Active',
+  [STATUS.REVISIT]: 'Revisit',
+  [STATUS.DONE]: 'Archived',
+}
+
+export function revisitLabel(days) {
+  const preset = REVISIT_PRESETS.find((p) => p.days === days)
+  return preset ? preset.label : `Every ${days} days`
+}
+
+/** Move a goal to a new state, keeping the compat fields honest.
+    `completedAt` records the first completion and survives a later reopen —
+    it's history, not state. */
+export function withStatus(goal, status, patch = {}) {
+  const finished = status === STATUS.DONE || status === STATUS.REVISIT
+  return {
+    ...goal,
+    ...patch,
+    status,
+    archived: status === STATUS.DONE,
+    completedAt: finished ? goal.completedAt || new Date().toISOString() : goal.completedAt || null,
+  }
+}
+
 export const EMOJI_CHOICES = [
   '🎯', '📚', '💻', '🗣️', '🎸', '🏃', '🧘', '✍️', '🎨', '🧪',
   '💪', '🍳', '📷', '🌱', '🧠', '💤', '🎹', '📈', '🗂️', '🕯️',
@@ -70,6 +174,7 @@ export function newGoal(index = 0) {
   return {
     id: crypto.randomUUID(),
     name: '',
+    category: '',
     emoji: EMOJI_CHOICES[index % EMOJI_CHOICES.length],
     colorSlot: (index % 8) + 1,
     unitId: 'hours',
@@ -80,8 +185,22 @@ export function newGoal(index = 0) {
     cadence: 'week',
     target: 5,
     why: '',
+    status: STATUS.ACTIVE,
     archived: false,
+    revisitEvery: DEFAULT_REVISIT_EVERY,
+    completedAt: null,
     createdAt: new Date().toISOString(),
+  }
+}
+
+/** Fill in fields a goal from an older save (or an older backup) won't have. */
+export function migrateGoal(goal) {
+  return {
+    ...goal,
+    status: statusOf(goal),
+    archived: statusOf(goal) === STATUS.DONE,
+    revisitEvery: goal.revisitEvery ?? DEFAULT_REVISIT_EVERY,
+    completedAt: goal.completedAt ?? null,
   }
 }
 

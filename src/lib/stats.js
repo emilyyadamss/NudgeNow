@@ -5,6 +5,7 @@ import {
   todayKey, addDays, daysBetween, periodStart, periodLength,
   periodRange, dayRange,
 } from './date.js'
+import { isActive, revisitEvery } from './model.js'
 
 /** goalId → Map(dateKey → summed amount) */
 export function indexEntries(entries) {
@@ -141,11 +142,28 @@ export function goalStats(goal, days, settings, today = todayKey()) {
   }
 }
 
+/** Where a goal sits in its revisit cycle. Positive `dueIn` means still fresh;
+    `overdue` counts the days past the interval. */
+export function revisitStatus(goal, stats) {
+  const every = revisitEvery(goal)
+  const elapsed = stats.quietFor
+  return {
+    every,
+    elapsed,
+    dueIn: every - elapsed,
+    overdue: Math.max(0, elapsed - every),
+    due: elapsed >= every,
+    pct: Math.min(1, elapsed / every),
+  }
+}
+
 /** How evenly attention is spread across goals, 0–100.
     Normalised Shannon entropy of each goal's share of the last 30 days,
-    measured on target-relative progress so goals in different units compare. */
+    measured on target-relative progress so goals in different units compare.
+    Revisit goals sit this out — they're deliberately low-volume, and counting
+    them would read as lopsided attention when it's the intended shape. */
 export function balanceScore(goals, byGoal, settings, today = todayKey()) {
-  const active = goals.filter((g) => !g.archived)
+  const active = goals.filter(isActive)
   if (active.length < 2) return null
   const shares = active.map((g) => {
     const days = byGoal.get(g.id)

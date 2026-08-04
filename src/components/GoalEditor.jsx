@@ -2,22 +2,42 @@ import { useState } from 'react'
 import Modal from './Modal.jsx'
 import {
   COLOR_SLOTS, colorVar, EMOJI_CHOICES, UNIT_PRESETS, unitFor, unitWord,
+  CATEGORY_SUGGESTIONS, categoryList, normaliseCategory,
+  STATUS, STATUS_LABELS, REVISIT_PRESETS, statusOf, revisitEvery, withStatus,
 } from '../lib/model.js'
 
-export default function GoalEditor({ goal, isNew, onSave, onDelete, onClose }) {
+const STATUS_HINTS = {
+  [STATUS.ACTIVE]: 'Nudged on how quiet it has gone and how far behind target it is.',
+  [STATUS.REVISIT]: 'Finished, but kept warm — nudged only when the interval below has elapsed.',
+  [STATUS.DONE]: 'Filed away. Never nudged, and left out of every count.',
+}
+
+export default function GoalEditor({ goal, isNew, allGoals = [], onSave, onDelete, onClose }) {
   const [draft, setDraft] = useState(goal)
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }))
   const unit = unitFor(draft)
   const custom = draft.unitId === 'custom'
   const valid = draft.name.trim().length > 0
+  const status = statusOf(draft)
+  const every = revisitEvery(draft)
+
+  // Existing categories first, then any suggestions not already in use.
+  const inUse = categoryList(allGoals).filter(Boolean)
+  const options = [...inUse, ...CATEGORY_SUGGESTIONS.filter((c) => !inUse.includes(c))]
+  const currentCategory = normaliseCategory(draft.category)
 
   const submit = () => {
     if (!valid) return
-    onSave({
-      ...draft,
-      name: draft.name.trim(),
-      target: Math.max(0, Number(draft.target) || 0),
-    })
+    onSave(withStatus(
+      {
+        ...draft,
+        name: draft.name.trim(),
+        category: normaliseCategory(draft.category),
+        target: Math.max(0, Number(draft.target) || 0),
+        revisitEvery: every,
+      },
+      status,
+    ))
   }
 
   return (
@@ -27,14 +47,9 @@ export default function GoalEditor({ goal, isNew, onSave, onDelete, onClose }) {
       footer={
         <>
           {!isNew && (
-            <>
-              <button className="btn btn-ghost btn-danger" onClick={() => onDelete(draft.id)} style={{ marginRight: 'auto' }}>
-                Delete
-              </button>
-              <button className="btn" onClick={() => onSave({ ...draft, archived: !draft.archived })}>
-                {draft.archived ? 'Unarchive' : 'Archive'}
-              </button>
-            </>
+            <button className="btn btn-ghost btn-danger" onClick={() => onDelete(draft.id)} style={{ marginRight: 'auto' }}>
+              Delete
+            </button>
           )}
           <button className="btn" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" onClick={submit} disabled={!valid}>
@@ -53,6 +68,36 @@ export default function GoalEditor({ goal, isNew, onSave, onDelete, onClose }) {
           onChange={(e) => set({ name: e.target.value })}
           onKeyDown={(e) => { if (e.key === 'Enter' && valid) submit() }}
         />
+      </div>
+
+      <div className="field">
+        <label htmlFor="g-cat">Category <span className="hint">(optional — for grouping only)</span></label>
+        <input
+          id="g-cat"
+          className="input"
+          list="category-options"
+          value={draft.category || ''}
+          placeholder="Learning, Health, Creative…"
+          onChange={(e) => set({ category: e.target.value })}
+          onKeyDown={(e) => { if (e.key === 'Enter' && valid) submit() }}
+        />
+        <datalist id="category-options">
+          {options.map((c) => <option key={c} value={c} />)}
+        </datalist>
+        {options.length > 0 && (
+          <div className="chip-row" style={{ marginTop: 2 }}>
+            {options.slice(0, 6).map((c) => (
+              <button
+                key={c}
+                className="chip-btn"
+                aria-pressed={currentCategory === c}
+                onClick={() => set({ category: currentCategory === c ? '' : c })}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="field">
@@ -138,6 +183,38 @@ export default function GoalEditor({ goal, isNew, onSave, onDelete, onClose }) {
           ))}
         </div>
       </div>
+
+      {!isNew && (
+        <div className="field">
+          <span className="label">State</span>
+          <div className="seg">
+            {[STATUS.ACTIVE, STATUS.REVISIT, STATUS.DONE].map((s) => (
+              <button
+                key={s}
+                aria-pressed={status === s}
+                onClick={() => set(withStatus(draft, s, { revisitEvery: every }))}
+              >
+                {STATUS_LABELS[s]}
+              </button>
+            ))}
+          </div>
+          <span className="hint">{STATUS_HINTS[status]}</span>
+          {status === STATUS.REVISIT && (
+            <div className="chip-row" style={{ marginTop: 4 }}>
+              {REVISIT_PRESETS.map((p) => (
+                <button
+                  key={p.days}
+                  className="chip-btn"
+                  aria-pressed={every === p.days}
+                  onClick={() => set({ revisitEvery: p.days })}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="field">
         <span className="label">Icon</span>

@@ -20,19 +20,22 @@ export default function NudgeCard({ pick, ranked, settings, onLog, onOpen, onCyc
     )
   }
 
-  const { goal, stats } = pick
+  const { goal, stats, mode, revisit } = pick
   const unit = unitFor(goal)
   const { lead, detail } = explainNudge(pick, settings)
   const color = colorVar(goal.colorSlot)
   const others = ranked.filter((r) => r.goal.id !== goal.id).slice(0, 3)
+  const practice = mode === 'revisit'
 
   return (
     <div className="nudge" style={{ '--goal-color': color }}>
       <div className="nudge-inner">
         <div className="nudge-body">
           <div className="nudge-eyebrow">
-            <span aria-hidden="true">{pick.fresh ? '🌱' : '👋'}</span>
-            {pick.fresh ? 'Start here' : cycled ? 'Also needs you' : 'Your nudge today'}
+            <span aria-hidden="true">{practice ? '🔁' : pick.fresh ? '🌱' : '👋'}</span>
+            {practice
+              ? 'Keep it from fading'
+              : pick.fresh ? 'Start here' : cycled ? 'Also needs you' : 'Your nudge today'}
           </div>
 
           <h1 className="nudge-title">
@@ -47,10 +50,19 @@ export default function NudgeCard({ pick, ranked, settings, onLog, onOpen, onCyc
 
           <div className="nudge-facts">
             <div className="nudge-fact">
-              <div className="k">Last logged</div>
+              <div className="k">{practice ? 'Last practised' : 'Last logged'}</div>
               <div className="v">{relativeDays(stats.daysSince)}</div>
             </div>
-            {stats.target > 0 && (
+            {practice && (
+              <div className="nudge-fact">
+                <div className="k">Revisit every</div>
+                <div className="v">
+                  {revisit.every}
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 550 }}> days</span>
+                </div>
+              </div>
+            )}
+            {!practice && stats.target > 0 && (
               <div className="nudge-fact">
                 <div className="k">Last {stats.periodLength} days</div>
                 <div className="v">
@@ -62,14 +74,18 @@ export default function NudgeCard({ pick, ranked, settings, onLog, onOpen, onCyc
               </div>
             )}
             <div className="nudge-fact">
-              <div className="k">Streak</div>
-              <div className="v">{stats.streak} {stats.streak === 1 ? 'day' : 'days'}</div>
+              <div className="k">{practice ? 'Overdue by' : 'Streak'}</div>
+              <div className="v">
+                {practice
+                  ? `${revisit.overdue} ${revisit.overdue === 1 ? 'day' : 'days'}`
+                  : `${stats.streak} ${stats.streak === 1 ? 'day' : 'days'}`}
+              </div>
             </div>
           </div>
 
           <div className="nudge-actions">
             <button className="btn btn-primary" onClick={() => onLog(goal.id)}>
-              Log {goal.name}
+              {practice ? `Practise ${goal.name}` : `Log ${goal.name}`}
             </button>
             <button className="btn" onClick={() => onOpen(goal.id)}>See progress</button>
             {others.length > 0 && (
@@ -80,7 +96,7 @@ export default function NudgeCard({ pick, ranked, settings, onLog, onOpen, onCyc
           </div>
 
           <p className="hint" style={{ marginTop: 12 }}>
-            {suggestedAction(goal, stats)}.
+            {suggestedAction(goal, stats, mode)}.
           </p>
         </div>
       </div>

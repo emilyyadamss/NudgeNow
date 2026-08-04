@@ -2,11 +2,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Dashboard from './views/Dashboard.jsx'
 import GoalDetail from './views/GoalDetail.jsx'
 import SettingsView from './views/SettingsView.jsx'
+import ArchiveView from './views/ArchiveView.jsx'
 import GoalEditor from './components/GoalEditor.jsx'
 import LogModal from './components/LogModal.jsx'
+import CompleteModal from './components/CompleteModal.jsx'
 import { load, save } from './lib/storage.js'
 import { buildSample } from './lib/sample.js'
-import { colorVar, newGoal, newEntry, unitFor, formatAmount, unitWord, DEFAULT_SETTINGS } from './lib/model.js'
+import {
+  colorVar, newGoal, newEntry, unitFor, formatAmount, unitWord, DEFAULT_SETTINGS,
+  groupByCategory, categoryLabel, STATUS, isActive, isRevisit, isDone, inPlay,
+  statusOf, withStatus, revisitLabel,
+} from './lib/model.js'
+import { goalStats } from './lib/stats.js'
 import { indexEntries } from './lib/stats.js'
 import { scoreGoals, pickNudge } from './lib/nudge.js'
 import { todayKey } from './lib/date.js'
@@ -16,6 +23,7 @@ export default function App() {
   const [view, setView] = useState({ name: 'dashboard' })
   const [editing, setEditing] = useState(null)     // { goal, isNew }
   const [logging, setLogging] = useState(null)     // { goalId, date }
+  const [finishing, setFinishing] = useState(null) // { goal, intent }
   const [cycle, setCycle] = useState(0)
   const [toasts, setToasts] = useState([])
   const toastId = useRef(0)
@@ -41,13 +49,22 @@ export default function App() {
 
   /* ------------------------------------------------------------- derived */
   const byGoal = useMemo(() => indexEntries(entries), [entries])
-  const activeGoals = useMemo(() => goals.filter((g) => !g.archived), [goals])
-  const archived = useMemo(() => goals.filter((g) => g.archived), [goals])
+  const activeGoals = useMemo(() => goals.filter(isActive), [goals])
+  const revisitGoals = useMemo(() => goals.filter(isRevisit), [goals])
+  const archived = useMemo(() => goals.filter(isDone), [goals])
+  // Anything you can still log against: active goals and goals in revisit.
+  const loggable = useMemo(() => goals.filter(inPlay), [goals])
   const ranked = useMemo(
     () => scoreGoals(goals, byGoal, settings, todayKey()),
     [goals, byGoal, settings],
   )
+  const rankedActive = useMemo(() => ranked.filter((r) => r.mode === 'active'), [ranked])
+  const rankedRevisit = useMemo(() => ranked.filter((r) => r.mode === 'revisit'), [ranked])
+  const dueRevisit = useMemo(() => rankedRevisit.filter((r) => r.revisit.due), [rankedRevisit])
   const top = useMemo(() => pickNudge(ranked), [ranked])
+  // Sidebar groups by category; within each group the neediest goal stays first,
+  // since `ranked` is already score-ordered. Revisit goals get their own group.
+  const navGroups = useMemo(() => groupByCategory(rankedActive, (r) => r.goal), [rankedActive])
   const pick = cycle > 0 && ranked.length > 0 ? ranked[cycle % ranked.length] : top
 
   /* ------------------------------------------------------------- mutations */
@@ -75,6 +92,38 @@ export default function App() {
     toast('Goal deleted')
   }, [toast])
 
+  /* Completing a goal is one decision with two endings: file it away, or keep
+     it in revisit so it still gets tapped on a long interval. Either way the
+     goal and its entries stay exactly as they were. */
+  const finishGoal = useCallback((id, { status, revisitEvery }) => {
+    let name = ''
+    setState((s) => ({
+      ...s,
+      goals: s.goals.map((g) => {
+        if (g.id !== id) return g
+        name = g.name
+        return withStatus(g, status, { revisitEvery })
+      }),
+    }))
+    setFinishing(null)
+    toast(status === STATUS.REVISIT
+      ? `${name} moved to revisit — ${revisitLabel(revisitEvery).toLowerCase()}`
+      : `${name} archived`)
+  }, [toast])
+
+  const reactivateGoal = useCallback((id) => {
+    let name = ''
+    setState((s) => ({
+      ...s,
+      goals: s.goals.map((g) => {
+        if (g.id !== id) return g
+        name = g.name
+        return withStatus(g, STATUS.ACTIVE)
+      }),
+    }))
+    toast(`${name} is active again`)
+  }, [toast])
+
   const addEntry = useCallback(({ goalId, date, amount, note }) => {
     setState((s) => ({ ...s, entries: [...s.entries, newEntry(goalId, date, amount, note)] }))
     setLogging(null)
@@ -96,14 +145,15 @@ export default function App() {
   }, [goals.length])
 
   const openLog = useCallback((goalId, date) => {
-    if (activeGoals.length === 0) { openNewGoal(); return }
-    setLogging({ goalId: goalId || activeGoals[0].id, date })
-  }, [activeGoals, openNewGoal])
+    if (loggable.length === 0) { openNewGoal(); return }
+    const target = goalId && loggable.some((g) => g.id === goalId) ? goalId : loggable[0].id
+    setLogging({ goalId: target, date })
+  }, [loggable, openNewGoal])
 
   /* ------------------------------------------------------------- shortcuts */
   useEffect(() => {
     const onKey = (e) => {
-      if (editing || logging) return
+      if (editing || logging || finishing) return
       const t = e.target
       if (t instanceof HTMLElement && /input|textarea|select/i.test(t.tagName)) return
       if (e.metaKey || e.ctrlKey || e.altKey) return
@@ -114,7 +164,7 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [editing, logging, view, openNewGoal, openLog])
+  }, [editing, logging, finishing, view, openNewGoal, openLog])
 
   const currentGoal = view.name === 'goal' ? goals.find((g) => g.id === view.goalId) : null
 
@@ -140,38 +190,60 @@ export default function App() {
           <span className="nav-name">Today</span>
         </button>
 
-        {activeGoals.length > 0 && <div className="nav-label">Goals</div>}
-        {ranked.map(({ goal, stats }) => (
-          <button
-            key={goal.id}
-            className="nav-item"
-            style={{ '--goal-color': colorVar(goal.colorSlot) }}
-            aria-current={view.name === 'goal' && view.goalId === goal.id}
-            onClick={() => setView({ name: 'goal', goalId: goal.id })}
-          >
-            <span className="dot" />
-            <span className="nav-name">{goal.name}</span>
-            <span className="nav-meta">
-              {stats.daysSince == null ? '—' : stats.daysSince === 0 ? 'today' : `${stats.daysSince}d`}
-            </span>
-          </button>
-        ))}
-
-        {archived.length > 0 && (
-          <>
-            <div className="nav-label">Archived</div>
-            {archived.map((goal) => (
+        {navGroups.map(([category, items]) => (
+          <div key={category || '_none'} style={{ display: 'contents' }}>
+            <div className="nav-label">
+              {navGroups.length === 1 && !category ? 'Goals' : categoryLabel(category)}
+            </div>
+            {items.map(({ goal, stats }) => (
               <button
                 key={goal.id}
                 className="nav-item"
-                style={{ '--goal-color': 'var(--text-muted)' }}
+                style={{ '--goal-color': colorVar(goal.colorSlot) }}
                 aria-current={view.name === 'goal' && view.goalId === goal.id}
                 onClick={() => setView({ name: 'goal', goalId: goal.id })}
               >
                 <span className="dot" />
                 <span className="nav-name">{goal.name}</span>
+                <span className="nav-meta">
+                  {stats.daysSince == null ? '—' : stats.daysSince === 0 ? 'today' : `${stats.daysSince}d`}
+                </span>
               </button>
             ))}
+          </div>
+        ))}
+
+        {rankedRevisit.length > 0 && (
+          <>
+            <div className="nav-label">Revisit</div>
+            {rankedRevisit.map(({ goal, revisit }) => (
+              <button
+                key={goal.id}
+                className="nav-item"
+                style={{ '--goal-color': colorVar(goal.colorSlot) }}
+                aria-current={view.name === 'goal' && view.goalId === goal.id}
+                onClick={() => setView({ name: 'goal', goalId: goal.id })}
+              >
+                <span className="dot" />
+                <span className="nav-name">{goal.name}</span>
+                <span className="nav-meta">{revisit.due ? 'due' : `${revisit.dueIn}d`}</span>
+              </button>
+            ))}
+          </>
+        )}
+
+        {archived.length > 0 && (
+          <>
+            <div className="nav-label">Archive</div>
+            <button
+              className="nav-item"
+              aria-current={view.name === 'archive'}
+              onClick={() => setView({ name: 'archive' })}
+            >
+              <span aria-hidden="true">📦</span>
+              <span className="nav-name">Completed</span>
+              <span className="nav-meta">{archived.length}</span>
+            </button>
           </>
         )}
 
@@ -200,12 +272,14 @@ export default function App() {
               <div>
                 <h1 className="page-title">Today</h1>
                 <p className="page-sub">
-                  {activeGoals.length > 0
-                    ? 'One goal gets your attention. The rest keep their place.'
-                    : 'Let’s get your goals in.'}
+                  {loggable.length === 0
+                    ? 'Let’s get your goals in.'
+                    : dueRevisit.length > 0
+                      ? `One goal gets your attention. ${dueRevisit.length} finished ${dueRevisit.length === 1 ? 'goal is' : 'goals are'} due for practice.`
+                      : 'One goal gets your attention. The rest keep their place.'}
                 </p>
               </div>
-              {activeGoals.length > 0 && (
+              {loggable.length > 0 && (
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn" onClick={openNewGoal}>+ New goal</button>
                   <button className="btn btn-primary" onClick={() => openLog()}>Log progress</button>
@@ -216,7 +290,9 @@ export default function App() {
               goals={activeGoals}
               entries={entries}
               byGoal={byGoal}
-              ranked={ranked}
+              ranked={rankedActive}
+              revisit={rankedRevisit}
+              pool={ranked}
               pick={pick}
               cycled={cycle > 0}
               settings={settings}
@@ -224,6 +300,7 @@ export default function App() {
               onOpen={(id) => setView({ name: 'goal', goalId: id })}
               onCycle={() => setCycle((c) => (c > 0 ? 0 : 1))}
               onNewGoal={openNewGoal}
+              onComplete={(goal) => setFinishing({ goal, intent: 'complete' })}
             />
           </>
         )}
@@ -237,8 +314,35 @@ export default function App() {
             onEdit={(g) => setEditing({ goal: g, isNew: false })}
             onLog={openLog}
             onDeleteEntry={deleteEntry}
-            onBack={() => setView({ name: 'dashboard' })}
+            onBack={() => setView({ name: statusOf(currentGoal) === STATUS.DONE ? 'archive' : 'dashboard' })}
+            onComplete={(g) => setFinishing({ goal: g, intent: 'complete' })}
+            onRevisit={(g) => setFinishing({ goal: g, intent: 'revisit' })}
+            onReactivate={reactivateGoal}
           />
+        )}
+
+        {view.name === 'archive' && (
+          <>
+            <div className="page-head">
+              <div>
+                <h1 className="page-title">Archive</h1>
+                <p className="page-sub">
+                  {archived.length} finished {archived.length === 1 ? 'goal' : 'goals'} · nothing here is
+                  nudged, and nothing is lost
+                </p>
+              </div>
+              <button className="btn" onClick={() => setView({ name: 'dashboard' })}>← Today</button>
+            </div>
+            <ArchiveView
+              goals={archived}
+              byGoal={byGoal}
+              settings={settings}
+              onOpen={(id) => setView({ name: 'goal', goalId: id })}
+              onReactivate={reactivateGoal}
+              onRevisit={(g) => setFinishing({ goal: g, intent: 'revisit' })}
+              onBack={() => setView({ name: 'dashboard' })}
+            />
+          </>
         )}
 
         {view.name === 'goal' && !currentGoal && (
@@ -275,15 +379,26 @@ export default function App() {
         <GoalEditor
           goal={editing.goal}
           isNew={editing.isNew}
+          allGoals={goals}
           onSave={saveGoal}
           onDelete={deleteGoal}
           onClose={() => setEditing(null)}
         />
       )}
 
+      {finishing && (
+        <CompleteModal
+          goal={finishing.goal}
+          stats={goalStats(finishing.goal, byGoal.get(finishing.goal.id), settings, todayKey())}
+          intent={finishing.intent}
+          onConfirm={(choice) => finishGoal(finishing.goal.id, choice)}
+          onClose={() => setFinishing(null)}
+        />
+      )}
+
       {logging && (
         <LogModal
-          goals={activeGoals}
+          goals={loggable}
           goalId={logging.goalId}
           date={logging.date}
           onSave={addEntry}

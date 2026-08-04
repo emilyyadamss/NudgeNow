@@ -64,17 +64,61 @@ And across all goals, on **Today**:
 - The nudge card, with the reason it picked that goal and a bite-sized ask.
 - **Balance across goals** — every goal on one axis as a share of its own target,
   lowest first. This is the direct answer to "which one am I neglecting?"
+- A **category filter row**, scoping the board to Learning, Health, Creative, or
+  whatever you name — see [Categories](#categories) below.
 - **Attention balance** (0–100) — normalised entropy of how your effort is spread.
   100 means perfectly even; low means one goal is eating everything.
 - A cross-goal heatmap of how many different goals you touched each day.
 
+## Finishing a goal
+
+A goal that's done shouldn't just be deleted, and it shouldn't keep nagging
+either. Marking one complete asks a single question:
+
+| Ending | What happens |
+|---|---|
+| **Archive** | Filed away with its full history. Never nudged, left out of every count, and one click from coming back. Lives under *Archive → Completed*. |
+| **Revisit** | Finished, but kept warm. It leaves the target treadmill and is nudged only when its interval elapses — weekly through twice-yearly, or any number of days you type. |
+
+Revisit exists for the things you *learned* rather than the things you're
+grinding: a skill you worked for will quietly rust if nothing ever asks you to
+touch it again. A revisit goal scores **zero** until its interval has passed, so
+it never competes for daily attention; once due it enters just above the nudge
+threshold and climbs from there, so something badly overdue eventually outranks
+a merely quiet goal. Logging against it resets the clock.
+
+Revisit goals get their own *Keeping it fresh* section on Today and their own
+sidebar group showing the days until each is due. They sit out the attention
+balance score — they're deliberately low-volume, and counting them would read as
+lopsided when it's the intended shape.
+
+Anything archived can be moved into revisit later, and anything in revisit can go
+back to being fully active.
+
+## Categories
+
+Goals can carry a category — free text, with `Learning` / `Health` / `Creative` /
+`Career` / `Personal` offered as starting suggestions. Type a new one in the goal
+editor and it exists; every category already in use shows up as a one-tap chip.
+
+Categories group the sidebar and the goal list, and add a filter row above the
+board that scopes the stat tiles, the balance chart, and the cross-goal heatmap.
+
+**The nudge deliberately stays global.** Scoring never looks at categories, and
+the nudge card sits *above* the filter row — so narrowing the board to one
+category can't hide a slipping goal from another. That would reintroduce exactly
+the problem the app exists to solve.
+
+Goals with no category collect under *Uncategorised*, always sorted last.
+
 ## Customisation
 
 - Name, icon, colour, unit, target, and cadence per goal — all editable after the fact.
+- Categories, created on the fly — see above.
 - Custom units with your own singular/plural and decimal precision.
 - Nudge weighting and the staleness threshold.
 - Light / dark / system theme, week starting Monday or Sunday, heatmap length.
-- Archive goals to park them without losing their history.
+- Complete a goal into the archive, or into revisit on your own interval — see above.
 - Data tables under every chart (Settings → *Show data tables*).
 
 ## Keyboard
@@ -94,14 +138,14 @@ And across all goals, on **Today**:
 src/
   lib/
     date.js      local-date helpers, week/month bucketing
-    model.js     goal & entry shapes, unit presets, colour slots
+    model.js     goal & entry shapes, lifecycle, unit presets, colour slots
     stats.js     streaks, rolling totals, per-period series, balance score
     nudge.js     the scoring engine
     chart.js     axis ticks, mark paths, resize hook
     storage.js   localStorage + export/import
     sample.js    the demo dataset
   components/    Heatmap, ProgressChart, BalanceBars, Sparkline, cards, modals
-  views/         Dashboard, GoalDetail, SettingsView
+  views/         Dashboard, GoalDetail, ArchiveView, SettingsView
 ```
 
 Charts are hand-drawn SVG — no charting dependency. The eight goal colours are a
