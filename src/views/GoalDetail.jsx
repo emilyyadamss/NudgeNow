@@ -1,23 +1,25 @@
 import { useMemo, useState } from 'react'
 import Heatmap from '../components/Heatmap.jsx'
 import ProgressChart from '../components/ProgressChart.jsx'
+import TaskList from '../components/TaskList.jsx'
 import {
   colorVar, unitFor, formatAmount, unitWord, normaliseCategory,
   STATUS, statusOf, revisitLabel,
 } from '../lib/model.js'
 import { goalStats, revisitStatus } from '../lib/stats.js'
-import { formatShort, relativeDays, todayKey } from '../lib/date.js'
+import { formatShort, relativeDays, todayKey, dayKeyOf } from '../lib/date.js'
 
 export default function GoalDetail({
-  goal, entries, days, settings,
+  goal, entries, days, tasks = [], settings,
   onEdit, onLog, onDeleteEntry, onBack, onComplete, onRevisit, onReactivate,
+  onAddTask, onToggleTask, onDeleteTask,
 }) {
   const unit = unitFor(goal)
   const color = colorVar(goal.colorSlot)
   const stats = useMemo(() => goalStats(goal, days, settings, todayKey()), [goal, days, settings])
   const status = statusOf(goal)
   const revisit = status === STATUS.REVISIT ? revisitStatus(goal, stats) : null
-  const finishedOn = goal.completedAt ? formatShort(goal.completedAt.slice(0, 10)) : null
+  const finishedOn = goal.completedAt ? formatShort(dayKeyOf(goal.completedAt)) : null
 
   const [showAll, setShowAll] = useState(false)
   const all = useMemo(
@@ -173,6 +175,17 @@ export default function GoalDetail({
       )}
 
       <div className="stack">
+        <TaskList
+          goal={goal}
+          tasks={tasks}
+          stats={stats}
+          color={color}
+          readOnly={status === STATUS.DONE}
+          onAdd={onAddTask}
+          onToggle={onToggleTask}
+          onDelete={onDeleteTask}
+        />
+
         <ProgressChart
           goal={goal}
           days={days}

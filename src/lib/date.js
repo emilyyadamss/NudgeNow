@@ -16,6 +16,15 @@ export function todayKey() {
   return toKey(new Date())
 }
 
+/** An ISO timestamp → the day key it fell on *here*. Slicing the string
+    instead would hand back the UTC day, which is tomorrow for anyone west of
+    Greenwich in the evening. */
+export function dayKeyOf(iso) {
+  if (!iso) return null
+  const d = new Date(iso)
+  return isNaN(d) ? null : toKey(d)
+}
+
 export function addDays(key, n) {
   const d = fromKey(key)
   d.setDate(d.getDate() + n)

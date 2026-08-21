@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { colorVar, unitFor, formatAmount, unitWord, groupByCategory, categoryLabel } from '../lib/model.js'
 import { goalStats } from '../lib/stats.js'
-import { todayKey, formatShort } from '../lib/date.js'
+import { todayKey, formatShort, dayKeyOf } from '../lib/date.js'
 
 /* Finished goals, kept whole. Nothing here is scored or nudged — the archive
    is a record, not a backlog. Anything in it can come back, either fully
@@ -50,7 +50,7 @@ export default function ArchiveView({ goals, byGoal, settings, onOpen, onReactiv
                       <span className="goal-card-meta">
                         {formatAmount(stats.total, unit)} {unitWord(stats.total, unit)} over{' '}
                         {stats.activeDays} active {stats.activeDays === 1 ? 'day' : 'days'}
-                        {goal.completedAt ? ` · finished ${formatShort(goal.completedAt.slice(0, 10))}` : ''}
+                        {goal.completedAt ? ` · finished ${formatShort(dayKeyOf(goal.completedAt))}` : ''}
                       </span>
                     </span>
                   </button>

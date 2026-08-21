@@ -15,8 +15,8 @@ nothing leaves the machine. Settings → **Export backup** writes a JSON file yo
 can re-import later.
 
 First run is empty. Settings → **Load sample data** fills it with five plausible
-goals and six months of history if you'd rather see the charts before typing
-anything in.
+goals, six months of history, and a few starter steps if you'd rather see the
+charts before typing anything in.
 
 ## How the nudge decides
 
@@ -56,6 +56,7 @@ Per goal you get:
   cumulative view, over 3M / 6M / 1Y.
 - **Consistency heatmap** — up to a year of days, darker for bigger days.
   Click any square to log against that date.
+- **Next steps** — the to-do list for that goal (see below).
 - Streak, all-time total, pace against this period's target, and an editable
   entry log.
 
@@ -69,6 +70,46 @@ And across all goals, on **Today**:
 - **Attention balance** (0–100) — normalised entropy of how your effort is spread.
   100 means perfectly even; low means one goal is eating everything.
 - A cross-goal heatmap of how many different goals you touched each day.
+
+## Steps: to-dos that move the goal
+
+A target on its own doesn't tell you what to actually do this afternoon. Each goal
+has a **Next steps** list — the concrete things you mean to do — and each step
+carries the amount it is worth in the goal's own unit:
+
+| Step | Worth |
+|---|---|
+| Finish Genki chapter 4 | 1.5 hours |
+| Shadow three podcast episodes | 1 hour |
+| Book a tutor session | 1 hour |
+
+Tick one off and that amount is logged against the goal, dated today. The bar
+moves, the streak counts it, the heatmap fills in — because ticking a step doesn't
+create a special kind of progress, it writes an ordinary entry, which you'll see in
+the entry log with the step's name on it.
+
+That link runs both ways, so the numbers can't drift from the list:
+
+- **Untick a step** and exactly the entry it created is removed. Nothing else.
+- **Delete that entry** from the log and the step goes back to open — a checkbox
+  never claims credit for progress that isn't there.
+- **Delete a finished step** and the progress it logged stays. The work happened;
+  only the to-do goes.
+
+A step worth **0** is allowed, for things with no measurable size ("get the piano
+tuned"). It ticks off without touching the goal's numbers.
+
+Above the list, the open steps are totalled against what this period still needs —
+*"3 open steps · 45 minutes planned · 32% of what's left"* — so you can see at a
+glance whether what you've written down is actually enough to hit the target, or
+whether you need to plan more.
+
+The first open step also appears on the **nudge card** on Today, with its own
+checkbox. When a goal is nudged, the smallest useful ask is usually already written
+down, so you can tick it there instead of inventing one.
+
+Archived goals keep their list, read-only, as a record of what the goal was built
+from.
 
 ## Finishing a goal
 
@@ -127,6 +168,7 @@ Goals with no category collect under *Uncategorised*, always sorted last.
 |---|---|
 | `N` | New goal |
 | `L` | Log progress |
+| `↵` | Add the step you're typing, from the Next steps field |
 | `G` | Back to Today |
 | `,` | Settings |
 | `⌘↵` | Save, from inside the log dialog |
@@ -138,13 +180,13 @@ Goals with no category collect under *Uncategorised*, always sorted last.
 src/
   lib/
     date.js      local-date helpers, week/month bucketing
-    model.js     goal & entry shapes, lifecycle, unit presets, colour slots
-    stats.js     streaks, rolling totals, per-period series, balance score
+    model.js     goal, entry & task shapes, lifecycle, unit presets, colour slots
+    stats.js     streaks, rolling totals, per-period series, balance, task totals
     nudge.js     the scoring engine
     chart.js     axis ticks, mark paths, resize hook
     storage.js   localStorage + export/import
     sample.js    the demo dataset
-  components/    Heatmap, ProgressChart, BalanceBars, Sparkline, cards, modals
+  components/    Heatmap, ProgressChart, BalanceBars, Sparkline, TaskList, cards, modals
   views/         Dashboard, GoalDetail, ArchiveView, SettingsView
 ```
 

@@ -1,8 +1,11 @@
-import { colorVar, unitFor, formatAmount, unitWord } from '../lib/model.js'
+import { colorVar, unitFor, formatAmount, unitWord, withUnit } from '../lib/model.js'
 import { explainNudge, suggestedAction } from '../lib/nudge.js'
+import { nextTask } from '../lib/stats.js'
 import { relativeDays } from '../lib/date.js'
 
-export default function NudgeCard({ pick, ranked, settings, onLog, onOpen, onCycle, cycled }) {
+export default function NudgeCard({
+  pick, ranked, settings, onLog, onOpen, onCycle, cycled, tasks = [], onToggleTask,
+}) {
   if (!pick) {
     return (
       <div className="nudge" style={{ '--goal-color': 'var(--good)' }}>
@@ -26,6 +29,10 @@ export default function NudgeCard({ pick, ranked, settings, onLog, onOpen, onCyc
   const color = colorVar(goal.colorSlot)
   const others = ranked.filter((r) => r.goal.id !== goal.id).slice(0, 3)
   const practice = mode === 'revisit'
+  /* If this goal has steps waiting, the smallest useful ask is already written
+     down — offer that instead of asking someone to invent one. */
+  const next = onToggleTask ? nextTask(tasks) : null
+  const openSteps = tasks.filter((t) => !t.done).length
 
   return (
     <div className="nudge" style={{ '--goal-color': color }}>
@@ -82,6 +89,29 @@ export default function NudgeCard({ pick, ranked, settings, onLog, onOpen, onCyc
               </div>
             </div>
           </div>
+
+          {next && (
+            <div className="nudge-next">
+              <button
+                className="task-check"
+                role="checkbox"
+                aria-checked="false"
+                onClick={() => onToggleTask(next.id)}
+                aria-label={`Finish ${next.title}`}
+              >
+                <span aria-hidden="true">✓</span>
+              </button>
+              <span style={{ minWidth: 0 }}>
+                <span className="k">
+                  Next step{openSteps > 1 ? ` · ${openSteps - 1} more waiting` : ''}
+                </span>
+                <span className="v">{next.title}</span>
+              </span>
+              <span className="worth">
+                {Number(next.amount) > 0 ? withUnit(next.amount, unit) : 'no amount'}
+              </span>
+            </div>
+          )}
 
           <div className="nudge-actions">
             <button className="btn btn-primary" onClick={() => onLog(goal.id)}>

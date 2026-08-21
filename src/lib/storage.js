@@ -1,11 +1,11 @@
 /* localStorage persistence. Everything lives on this machine — no account,
    no network. Export/import gives you a portable JSON backup. */
 
-import { DEFAULT_SETTINGS, migrateGoal } from './model.js'
+import { DEFAULT_SETTINGS, migrateGoal, migrateTask } from './model.js'
 
 const KEY = 'nudgenow:v1'
 
-const EMPTY = { goals: [], entries: [], settings: { ...DEFAULT_SETTINGS } }
+const EMPTY = { goals: [], entries: [], tasks: [], settings: { ...DEFAULT_SETTINGS } }
 
 export function load() {
   try {
@@ -15,6 +15,7 @@ export function load() {
     return {
       goals: Array.isArray(parsed.goals) ? parsed.goals.map(migrateGoal) : [],
       entries: Array.isArray(parsed.entries) ? parsed.entries : [],
+      tasks: Array.isArray(parsed.tasks) ? parsed.tasks.map(migrateTask) : [],
       settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
     }
   } catch {
@@ -27,6 +28,7 @@ export function save(state) {
     localStorage.setItem(KEY, JSON.stringify({
       goals: state.goals,
       entries: state.entries,
+      tasks: state.tasks || [],
       settings: state.settings,
     }))
     return true
@@ -51,6 +53,8 @@ export function parseImport(text) {
   return {
     goals: parsed.goals.map(migrateGoal),
     entries: parsed.entries,
+    // Backups written before task lists existed simply have none.
+    tasks: Array.isArray(parsed.tasks) ? parsed.tasks.map(migrateTask) : [],
     settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
   }
 }

@@ -11,8 +11,8 @@ import { categoryList, categoryLabel, groupByCategory, normaliseCategory } from 
 const GOALS_UNIT = { one: 'goal', many: 'goals', abbr: '', precision: 0, step: 1 }
 
 export default function Dashboard({
-  goals, entries, byGoal, ranked, revisit = [], pool = ranked, pick, settings, cycled,
-  onLog, onOpen, onCycle, onNewGoal, onComplete,
+  goals, entries, byGoal, byTask, ranked, revisit = [], pool = ranked, pick, settings, cycled,
+  onLog, onOpen, onCycle, onNewGoal, onComplete, onToggleTask,
 }) {
   const today = todayKey()
   const [category, setCategory] = useState(null)   // null = every category
@@ -96,6 +96,8 @@ export default function Dashboard({
         ranked={pool}
         settings={settings}
         cycled={cycled}
+        tasks={(pick && byTask?.get(pick.goal.id)) || []}
+        onToggleTask={onToggleTask}
         onLog={onLog}
         onOpen={onOpen}
         onCycle={onCycle}
@@ -198,6 +200,7 @@ export default function Dashboard({
                 goal={goal}
                 stats={stats}
                 trend={trends.get(goal.id) || []}
+                tasks={byTask?.get(goal.id) || []}
                 onOpen={onOpen}
                 onLog={onLog}
                 onComplete={onComplete}

@@ -957,6 +957,119 @@ input[type="range"]::-moz-range-thumb {
 .entry-row .e-del { opacity: 0; transition: opacity 140ms var(--ease); }
 .entry-row:hover .e-del { opacity: 1; }
 
+/* task list — the steps that make up a goal */
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--grid);
+  font-size: 13.5px;
+}
+.task-row:last-child { border-bottom: none; }
+.task-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-amt {
+  font-weight: 600;
+  flex: none;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.task-when {
+  width: 62px;
+  flex: none;
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.task-del { opacity: 0; transition: opacity 140ms var(--ease); }
+.task-row:hover .task-del { opacity: 1; }
+.task-del:focus-visible { opacity: 1; }
+/* A finished step reads as settled, not gone — the amount it contributed
+   stays legible, because that is the part still counted. */
+.task-row.is-done .task-title { color: var(--text-muted); text-decoration: line-through; }
+
+.task-check {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 6px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  color: transparent;
+  font-size: 12px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  transition: background 140ms var(--ease), border-color 140ms var(--ease), transform 140ms var(--ease);
+}
+.task-check:hover:not(:disabled) {
+  border-color: var(--goal-color, var(--accent));
+  color: color-mix(in oklab, var(--goal-color, var(--accent)) 45%, transparent);
+}
+.task-check:active:not(:disabled) { transform: scale(0.9); }
+.task-check[aria-checked="true"] {
+  background: var(--goal-color, var(--accent));
+  border-color: transparent;
+  color: #fff;
+}
+.task-check:disabled { opacity: 0.5; cursor: default; }
+
+.task-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.task-divider .rule { flex: 1; height: 1px; background: var(--grid); }
+
+.task-add { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.task-add > .input { flex: 1 1 200px; min-width: 0; }
+.task-amt-field { display: flex; align-items: center; gap: 6px; flex: none; }
+.task-amt-field .input { width: 84px; text-align: center; font-weight: 600; }
+
+/* the next open step, offered right inside the nudge */
+.nudge-next {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.nudge-next .k {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.nudge-next .v {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 550;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nudge-next .worth {
+  margin-left: auto;
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
 /* toast */
 .toasts {
   position: fixed;
@@ -1009,4 +1122,6 @@ input[type="range"]::-moz-range-thumb {
   .main { padding: 20px 16px 60px; }
   .nudge-title { font-size: 24px; }
   .row-2, .row-3 { grid-template-columns: 1fr; }
+  .task-add > .input { flex: 1 1 100%; }
+  .task-when { display: none; }
 }

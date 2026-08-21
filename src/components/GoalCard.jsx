@@ -2,10 +2,11 @@ import { colorVar, unitFor, formatAmount, unitWord } from '../lib/model.js'
 import { relativeDays } from '../lib/date.js'
 import Sparkline from './Sparkline.jsx'
 
-export default function GoalCard({ goal, stats, trend, onOpen, onLog, onComplete }) {
+export default function GoalCard({ goal, stats, trend, tasks = [], onOpen, onLog, onComplete }) {
   const unit = unitFor(goal)
   const color = colorVar(goal.colorSlot)
   const pct = stats.target > 0 ? Math.round((stats.thisPeriod / stats.target) * 100) : null
+  const openSteps = tasks.filter((t) => !t.done).length
 
   return (
     <div className="goal-card" style={{ '--goal-color': color }}>
@@ -16,6 +17,7 @@ export default function GoalCard({ goal, stats, trend, onOpen, onLog, onComplete
           <span className="goal-card-meta">
             {stats.daysSince == null ? 'Never logged' : `Logged ${relativeDays(stats.daysSince)}`}
             {stats.streak > 1 ? ` · ${stats.streak}-day streak` : ''}
+            {openSteps > 0 ? ` · ${openSteps} ${openSteps === 1 ? 'step' : 'steps'} open` : ''}
           </span>
         </span>
         <span className="goal-card-val">
