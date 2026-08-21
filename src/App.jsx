@@ -9,9 +9,9 @@ import CompleteModal from './components/CompleteModal.jsx'
 import { load, save } from './lib/storage.js'
 import { buildSample } from './lib/sample.js'
 import {
-  colorVar, newGoal, newEntry, unitFor, formatAmount, unitWord, DEFAULT_SETTINGS,
-  groupByCategory, categoryLabel, STATUS, isActive, isRevisit, isDone, inPlay,
-  statusOf, withStatus, revisitLabel,
+  colorVar, newGoal, newEntry, newTask, indexTasks, reopenTask, unitFor, formatAmount, unitWord,
+  DEFAULT_SETTINGS, groupByCategory, categoryLabel, STATUS, isActive, isRevisit, isDone,
+  inPlay, statusOf, withStatus, revisitLabel, withUnit,
 } from './lib/model.js'
 import { goalStats } from './lib/stats.js'
 import { indexEntries } from './lib/stats.js'
@@ -29,6 +29,8 @@ export default function App() {
   const toastId = useRef(0)
 
   const { goals, entries, settings } = state
+  // Older saves (and backups written before task lists existed) simply have none.
+  const tasks = state.tasks || []
 
   /* ------------------------------------------------------------ persistence */
   useEffect(() => { save(state) }, [state])
@@ -49,6 +51,7 @@ export default function App() {
 
   /* ------------------------------------------------------------- derived */
   const byGoal = useMemo(() => indexEntries(entries), [entries])
+  const byTask = useMemo(() => indexTasks(tasks), [tasks])
   const activeGoals = useMemo(() => goals.filter(isActive), [goals])
   const revisitGoals = useMemo(() => goals.filter(isRevisit), [goals])
   const archived = useMemo(() => goals.filter(isDone), [goals])
@@ -86,6 +89,7 @@ export default function App() {
       ...s,
       goals: s.goals.filter((g) => g.id !== id),
       entries: s.entries.filter((e) => e.goalId !== id),
+      tasks: (s.tasks || []).filter((t) => t.goalId !== id),
     }))
     setEditing(null)
     setView({ name: 'dashboard' })
@@ -135,9 +139,83 @@ export default function App() {
     }
   }, [goals, toast])
 
+  /* Deleting an entry that came from a ticked-off step reopens that step —
+     otherwise the checkbox would claim credit for progress no longer there. */
   const deleteEntry = useCallback((id) => {
-    setState((s) => ({ ...s, entries: s.entries.filter((e) => e.id !== id) }))
+    setState((s) => {
+      const entry = s.entries.find((e) => e.id === id)
+      return {
+        ...s,
+        entries: s.entries.filter((e) => e.id !== id),
+        tasks: entry?.taskId
+          ? (s.tasks || []).map((t) => (t.id === entry.taskId ? reopenTask(t) : t))
+          : s.tasks || [],
+      }
+    })
     toast('Entry removed')
+  }, [toast])
+
+  /* ----------------------------------------------------------------- tasks */
+
+  const addTask = useCallback(({ goalId, title, amount }) => {
+    setState((s) => {
+      const list = s.tasks || []
+      const order = list.filter((t) => t.goalId === goalId).length
+      return { ...s, tasks: [...list, newTask(goalId, title, amount, order)] }
+    })
+  }, [])
+
+  /* Ticking a step off is just logging: it writes an ordinary entry for today,
+     stamped with the step that produced it. Unticking deletes exactly that
+     entry and nothing else, so the goal's totals stay honest in both
+     directions. A step worth 0 is checked off without touching the numbers. */
+  const toggleTask = useCallback((id) => {
+    let message = ''
+    setState((s) => {
+      const task = (s.tasks || []).find((t) => t.id === id)
+      if (!task) return s
+      if (task.done) {
+        message = `“${task.title}” is open again`
+        return {
+          ...s,
+          entries: task.entryId ? s.entries.filter((e) => e.id !== task.entryId) : s.entries,
+          tasks: s.tasks.map((t) => (t.id === id ? reopenTask(t) : t)),
+        }
+      }
+      const goal = s.goals.find((g) => g.id === task.goalId)
+      const worth = Math.max(0, Number(task.amount) || 0)
+      const entry = worth > 0 ? newEntry(task.goalId, todayKey(), worth, task.title, task.id) : null
+      message = entry && goal
+        ? `“${task.title}” done — ${withUnit(worth, unitFor(goal))} on ${goal.name}`
+        : `“${task.title}” done`
+      return {
+        ...s,
+        entries: entry ? [...s.entries, entry] : s.entries,
+        tasks: s.tasks.map((t) => (t.id === id
+          ? { ...t, done: true, entryId: entry?.id || null, completedAt: new Date().toISOString() }
+          : t)),
+      }
+    })
+    setCycle(0)
+    if (message) toast(message)
+  }, [toast])
+
+  /* Deleting a finished step keeps the entry it logged. The work happened;
+     only the to-do item goes. */
+  const deleteTask = useCallback((id) => {
+    let logged = false
+    setState((s) => {
+      const task = (s.tasks || []).find((t) => t.id === id)
+      logged = !!task?.entryId
+      return {
+        ...s,
+        tasks: (s.tasks || []).filter((t) => t.id !== id),
+        entries: task?.entryId
+          ? s.entries.map((e) => (e.id === task.entryId ? { ...e, taskId: null } : e))
+          : s.entries,
+      }
+    })
+    toast(logged ? 'Step removed — the progress it logged stays' : 'Step removed')
   }, [toast])
 
   const openNewGoal = useCallback(() => {
@@ -290,6 +368,7 @@ export default function App() {
               goals={activeGoals}
               entries={entries}
               byGoal={byGoal}
+              byTask={byTask}
               ranked={rankedActive}
               revisit={rankedRevisit}
               pool={ranked}
@@ -301,6 +380,7 @@ export default function App() {
               onCycle={() => setCycle((c) => (c > 0 ? 0 : 1))}
               onNewGoal={openNewGoal}
               onComplete={(goal) => setFinishing({ goal, intent: 'complete' })}
+              onToggleTask={toggleTask}
             />
           </>
         )}
@@ -310,6 +390,7 @@ export default function App() {
             goal={currentGoal}
             entries={entries}
             days={byGoal.get(currentGoal.id)}
+            tasks={byTask.get(currentGoal.id)}
             settings={settings}
             onEdit={(g) => setEditing({ goal: g, isNew: false })}
             onLog={openLog}
@@ -318,6 +399,9 @@ export default function App() {
             onComplete={(g) => setFinishing({ goal: g, intent: 'complete' })}
             onRevisit={(g) => setFinishing({ goal: g, intent: 'revisit' })}
             onReactivate={reactivateGoal}
+            onAddTask={addTask}
+            onToggleTask={toggleTask}
+            onDeleteTask={deleteTask}
           />
         )}
 
@@ -361,13 +445,13 @@ export default function App() {
             toast={toast}
             onImport={(next) => { setState(next); toast('Backup restored'); setView({ name: 'dashboard' }) }}
             onLoadSample={() => {
-              const { goals: g, entries: e } = buildSample()
-              setState((s) => ({ ...s, goals: g, entries: e }))
+              const { goals: g, entries: e, tasks: t } = buildSample()
+              setState((s) => ({ ...s, goals: g, entries: e, tasks: t }))
               setView({ name: 'dashboard' })
               toast('Sample data loaded')
             }}
             onClearAll={() => {
-              setState({ goals: [], entries: [], settings: { ...DEFAULT_SETTINGS, theme: settings.theme } })
+              setState({ goals: [], entries: [], tasks: [], settings: { ...DEFAULT_SETTINGS, theme: settings.theme } })
               setView({ name: 'dashboard' })
               toast('All data cleared')
             }}

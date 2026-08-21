@@ -182,3 +182,35 @@ export function balanceScore(goals, byGoal, settings, today = todayKey()) {
   }
   return Math.round((h / Math.log(n)) * 100)
 }
+
+/** What a goal's task list amounts to, in the goal's own unit.
+
+    `covers` answers the question the list is really for: if I tick off
+    everything still open, does this period's target get met? It is measured
+    against what's left to do, not the whole target, so a goal already halfway
+    there isn't told it needs the full amount again. */
+export function taskSummary(tasks, stats) {
+  const list = tasks || []
+  const open = list.filter((t) => !t.done)
+  const done = list.filter((t) => t.done)
+  const planned = open.reduce((a, t) => a + (Number(t.amount) || 0), 0)
+  const delivered = done.reduce((a, t) => a + (Number(t.amount) || 0), 0)
+  const remaining = Math.max(0, (stats?.target || 0) - (stats?.thisPeriod || 0))
+  return {
+    total: list.length,
+    open: open.length,
+    done: done.length,
+    planned,
+    delivered,
+    remaining,
+    // 0–1 share of the outstanding target the open tasks would cover.
+    covers: remaining > 0 ? Math.min(1, planned / remaining) : planned > 0 ? 1 : 0,
+    enough: remaining > 0 ? planned >= remaining : true,
+    pct: list.length ? Math.round((done.length / list.length) * 100) : 0,
+  }
+}
+
+/** The task to put in front of someone next: first open one in list order. */
+export function nextTask(tasks) {
+  return (tasks || []).find((t) => !t.done) || null
+}

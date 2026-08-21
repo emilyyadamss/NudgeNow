@@ -204,15 +204,75 @@ export function migrateGoal(goal) {
   }
 }
 
-export function newEntry(goalId, dateKey, amount, note = '') {
+export function newEntry(goalId, dateKey, amount, note = '', taskId = null) {
   return {
     id: crypto.randomUUID(),
     goalId,
     date: dateKey,
     amount: Number(amount) || 0,
     note,
+    taskId,
     loggedAt: new Date().toISOString(),
   }
+}
+
+/* ------------------------------------------------------------------ tasks */
+
+/* A task is one concrete thing you mean to do for a goal — "read chapter 4",
+   "run the 5k loop". It carries the amount it's worth, so ticking it off logs
+   that amount against the goal and the goal moves. Tasks never invent progress
+   of their own: everything they add is an ordinary entry, visible and
+   deletable like any other, and untick removes it again.
+
+   `amount: 0` is allowed and means "a step with no measurable size" — it gets
+   checked off without touching the goal's numbers. */
+export function newTask(goalId, title, amount, order = 0) {
+  return {
+    id: crypto.randomUUID(),
+    goalId,
+    title: String(title || '').trim(),
+    amount: Math.max(0, Number(amount) || 0),
+    done: false,
+    order,
+    entryId: null,          // the entry this task created, so untick can undo it
+    createdAt: new Date().toISOString(),
+    completedAt: null,
+  }
+}
+
+/** Fill in fields a task from an older save won't have. */
+export function migrateTask(task, index = 0) {
+  return {
+    ...task,
+    title: String(task.title || '').trim(),
+    amount: Math.max(0, Number(task.amount) || 0),
+    done: !!task.done,
+    order: Number.isFinite(task.order) ? task.order : index,
+    entryId: task.entryId ?? null,
+    completedAt: task.completedAt ?? null,
+  }
+}
+
+/** Put a finished task back on the list, forgetting the entry it made. */
+export const reopenTask = (task) => ({ ...task, done: false, entryId: null, completedAt: null })
+
+/** goalId → tasks, open first, each group in the order you added them. */
+export function indexTasks(tasks) {
+  const byGoal = new Map()
+  for (const t of tasks) {
+    let list = byGoal.get(t.goalId)
+    if (!list) { list = []; byGoal.set(t.goalId, list) }
+    list.push(t)
+  }
+  for (const list of byGoal.values()) list.sort(taskOrder)
+  return byGoal
+}
+
+/** Open before done; within each, by the order they were added. */
+export function taskOrder(a, b) {
+  if (a.done !== b.done) return a.done ? 1 : -1
+  if (a.done) return (b.completedAt || '').localeCompare(a.completedAt || '')
+  return (a.order ?? 0) - (b.order ?? 0) || (a.createdAt || '').localeCompare(b.createdAt || '')
 }
 
 export const DEFAULT_SETTINGS = {
