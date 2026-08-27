@@ -518,16 +518,36 @@ textarea.input { height: auto; padding: 9px 11px; resize: vertical; min-height: 
   text-align: center;
   padding: 12px 12px 40px;
 }
-.welcome-eyebrow {
-  display: inline-flex;
+.welcome-brand {
+  display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 11.5px;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.welcome-brand-mark {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  flex: none;
+}
+.welcome-brand-mark img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+}
+.welcome-brand-mark .logo-for-dark { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .welcome-brand-mark .logo-for-light { display: none; }
+  :root:where(:not([data-theme="light"])) .welcome-brand-mark .logo-for-dark { display: block; }
+}
+
+:root[data-theme="dark"] .welcome-brand-mark .logo-for-light { display: none; }
+:root[data-theme="dark"] .welcome-brand-mark .logo-for-dark { display: block; }
+
+.welcome-brand-name {
+  font-size: 19px;
   font-weight: 650;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 14px;
+  letter-spacing: -0.02em;
 }
 .welcome-title {
   font-size: 34px;
