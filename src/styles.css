@@ -1311,8 +1311,9 @@ button.log-goal:hover .n { text-decoration: underline; text-underline-offset: 3p
     border-right: none;
     border-bottom: 1px solid var(--border);
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
-    overflow-x: auto;
+    overflow-x: visible;
     padding: 12px;
     gap: 6px;
   }

@@ -118,7 +118,7 @@ export default function App() {
     }))
     setFinishing(null)
     toast(status === STATUS.REVISIT
-      ? `${name} moved to revisit — ${revisitLabel(revisitEvery).toLowerCase()}`
+      ? `${name} moved to revisit, ${revisitLabel(revisitEvery).toLowerCase()}`
       : `${name} archived`)
   }, [toast])
 
@@ -193,7 +193,7 @@ export default function App() {
       const worth = Math.max(0, Number(task.amount) || 0)
       const entry = worth > 0 ? newEntry(task.goalId, todayKey(), worth, task.title, task.id) : null
       message = entry && goal
-        ? `“${task.title}” done — ${withUnit(worth, unitFor(goal))} on ${goal.name}`
+        ? `“${task.title}” done, ${withUnit(worth, unitFor(goal))} on ${goal.name}`
         : `“${task.title}” done`
       return {
         ...s,
@@ -222,7 +222,7 @@ export default function App() {
           : s.entries,
       }
     })
-    toast(logged ? 'Step removed — the progress it logged stays' : 'Step removed')
+    toast(logged ? 'Step removed. The progress it logged stays' : 'Step removed')
   }, [toast])
 
   const openNewGoal = useCallback(() => {
@@ -381,7 +381,7 @@ export default function App() {
                   <h1 className="page-title">Today</h1>
                   <p className="page-sub">
                     {loggable.length === 0
-                      ? 'Everything here is archived — nothing left to nudge.'
+                      ? 'Everything here is archived! Nothing left to compass to.'
                       : dueRevisit.length > 0
                         ? `One goal gets your attention. ${dueRevisit.length} finished ${dueRevisit.length === 1 ? 'goal is' : 'goals are'} due for practice.`
                         : 'One goal gets your attention. The rest keep their place.'}

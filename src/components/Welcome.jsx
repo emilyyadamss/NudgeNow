@@ -25,8 +25,8 @@ const heroItem = {
 const FEATURES = [
   {
     icon: CircleCheckBig,
-    title: 'One nudge a day',
-    body: 'Compassed watches which goals go quiet and points you at the one that’s slipping — not everything at once.',
+    title: 'One step a day',
+    body: 'Compassed watches which goals go quiet and points you at the one that’s slipping, not everything at once.',
   },
   {
     icon: Scale,
@@ -41,7 +41,7 @@ const FEATURES = [
   {
     icon: RotateCcw,
     title: 'Finished isn’t forgotten',
-    body: 'Move a done goal to Revisit and it resurfaces on its own schedule — weekly to twice-yearly — instead of quietly rusting.',
+    body: 'Move a done goal to Revisit and it resurfaces on its own schedule, weekly to twice-yearly, instead of quietly rusting.',
   },
 ]
 
@@ -66,7 +66,7 @@ export default function Welcome({ onNewGoal, onLoadSample }) {
         </motion.h1>
         <motion.p className="welcome-sub" variants={heroItem}>
           It's easy to fall into one goal and forget the others. Compassed keeps every goal in
-          view, and each day points you at the one that's actually slipping — with the charts
+          view, and each day points you at the one that's actually slipping, with the charts
           to prove it, not just a reminder.
         </motion.p>
         <motion.div className="welcome-actions" variants={heroItem}>
@@ -88,7 +88,7 @@ export default function Welcome({ onNewGoal, onLoadSample }) {
       </div>
 
       <p className="welcome-note">
-        Everything lives in your browser's local storage — no account, and nothing leaves your machine.
+        Everything lives in your browser's local storage! No account, and nothing leaves your machine.
       </p>
     </div>
   )

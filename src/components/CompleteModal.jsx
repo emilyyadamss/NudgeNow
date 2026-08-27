@@ -72,7 +72,7 @@ export default function CompleteModal({ goal, stats, intent = 'complete', onConf
             >
               <span className="t">📦 Archive it</span>
               <span className="s">
-                Filed away with its full history. Never nudged — you can bring it back anytime.
+                Filed away with its full history. Never compassed to. You can bring it back anytime.
               </span>
             </button>
           </div>
@@ -106,7 +106,7 @@ export default function CompleteModal({ goal, stats, intent = 'complete', onConf
               style={{ width: 90 }}
             />
             <span className="hint">
-              days between check-ins — {goal.name} goes quiet until {days} days after its last entry.
+              days between check-ins, {goal.name} goes quiet until {days} days after its last entry.
             </span>
           </div>
         </div>

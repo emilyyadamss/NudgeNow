@@ -44,7 +44,7 @@ export default function BalanceBars({ ranked, settings, showTable }) {
         <div>
           <div className="card-title">Balance across goals</div>
           <div className="card-sub">
-            Progress against each goal's own target over its last cycle — lowest first
+            Progress against each goal's own target over its last cycle. Lowest first
           </div>
         </div>
       </div>

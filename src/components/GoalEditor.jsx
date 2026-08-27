@@ -144,7 +144,7 @@ export default function GoalEditor({ goal, isNew, allGoals = [], onSave, onDelet
         <span className="hint">
           {Number(draft.target) > 0
             ? `Aiming for ${draft.target} ${unitWord(Number(draft.target), unit)} every ${draft.cadence}.`
-            : 'No target — this goal will be nudged on how long it has been quiet alone.'}
+            : 'No target. This goal will be compassed to on how long it has been quiet alone.'}
         </span>
       </div>
 
