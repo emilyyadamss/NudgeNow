@@ -53,7 +53,7 @@ export default function LogModal({ goals, goalId, date, onSave, onClose }) {
           <label htmlFor="l-goal">Goal</label>
           <select id="l-goal" className="input" value={gid} onChange={(e) => { setGid(e.target.value); setAmount('') }}>
             {goals.map((g) => (
-              <option key={g.id} value={g.id}>{g.emoji} {g.name}</option>
+              <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </select>
         </div>

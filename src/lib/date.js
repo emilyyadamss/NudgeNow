@@ -100,6 +100,15 @@ export function formatLong(key) {
   return `${DAY_NAMES[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
 }
 
+/** An ISO timestamp → the clock time it was written, in the user's locale.
+    Entries are keyed by day; this is only ever a tie-breaker for the eye when
+    several land on the same one. */
+export function formatTime(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return isNaN(d) ? '' : d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+}
+
 export function monthLabel(key) {
   return MONTHS[fromKey(key).getMonth()]
 }

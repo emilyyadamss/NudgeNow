@@ -2,6 +2,13 @@ import { colorVar, unitFor, formatAmount, unitWord, withUnit } from '../lib/mode
 import { explainNudge, suggestedAction } from '../lib/nudge.js'
 import { nextTask } from '../lib/stats.js'
 import { relativeDays } from '../lib/date.js'
+import { GoalIcon } from '../lib/goalIcons.jsx'
+import pointerIcon from '../assets/pointer.png'
+import pointerIconLight from '../assets/pointer-light.png'
+import leafIcon from '../assets/leaf.png'
+import leafIconLight from '../assets/leaf-light.png'
+import turnIcon from '../assets/turn.png'
+import turnIconLight from '../assets/turn-light.png'
 
 export default function NudgeCard({
   pick, ranked, settings, onLog, onOpen, onCycle, cycled, tasks = [], onToggleTask,
@@ -15,7 +22,7 @@ export default function NudgeCard({
             <h2 className="nudge-title">Everything's moving</h2>
             <p className="nudge-reason">
               Every goal has been touched recently and is tracking near its target. Nothing is
-              being quietly forgotten — check back tomorrow.
+              being quietly forgotten. Check back tomorrow.
             </p>
           </div>
         </div>
@@ -30,7 +37,7 @@ export default function NudgeCard({
   const others = ranked.filter((r) => r.goal.id !== goal.id).slice(0, 3)
   const practice = mode === 'revisit'
   /* If this goal has steps waiting, the smallest useful ask is already written
-     down — offer that instead of asking someone to invent one. */
+     down, offer that instead of asking someone to invent one. */
   const next = onToggleTask ? nextTask(tasks) : null
   const openSteps = tasks.filter((t) => !t.done).length
 
@@ -39,14 +46,25 @@ export default function NudgeCard({
       <div className="nudge-inner">
         <div className="nudge-body">
           <div className="nudge-eyebrow">
-            <span aria-hidden="true">{practice ? '🔁' : pick.fresh ? '🌱' : '👋'}</span>
+            <span className="eyebrow-icon" aria-hidden="true">
+              <img
+                src={practice ? turnIcon : pick.fresh ? leafIcon : pointerIcon}
+                className="icon-for-light"
+                alt=""
+              />
+              <img
+                src={practice ? turnIconLight : pick.fresh ? leafIconLight : pointerIconLight}
+                className="icon-for-dark"
+                alt=""
+              />
+            </span>
             {practice
               ? 'Keep it from fading'
               : pick.fresh ? 'Start here' : cycled ? 'Also needs you' : 'Your nudge today'}
           </div>
 
           <h1 className="nudge-title">
-            <span aria-hidden="true">{goal.emoji}</span>
+            <GoalIcon id={goal.emoji} size={26} />
             {goal.name}
           </h1>
 

@@ -1,6 +1,7 @@
 import { colorVar, unitFor, formatAmount, unitWord } from '../lib/model.js'
 import { relativeDays } from '../lib/date.js'
 import Sparkline from './Sparkline.jsx'
+import { GoalIcon } from '../lib/goalIcons.jsx'
 
 export default function GoalCard({ goal, stats, trend, tasks = [], onOpen, onLog, onComplete }) {
   const unit = unitFor(goal)
@@ -11,7 +12,7 @@ export default function GoalCard({ goal, stats, trend, tasks = [], onOpen, onLog
   return (
     <div className="goal-card" style={{ '--goal-color': color }}>
       <button className="goal-card-top" onClick={() => onOpen(goal.id)} style={{ width: '100%' }}>
-        <span className="goal-emoji" aria-hidden="true">{goal.emoji}</span>
+        <span className="goal-emoji" aria-hidden="true"><GoalIcon id={goal.emoji} /></span>
         <span style={{ minWidth: 0, textAlign: 'left' }}>
           <span className="goal-card-name" style={{ display: 'block' }}>{goal.name}</span>
           <span className="goal-card-meta">

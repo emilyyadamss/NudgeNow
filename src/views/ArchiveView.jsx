@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { colorVar, unitFor, formatAmount, unitWord, groupByCategory, categoryLabel } from '../lib/model.js'
 import { goalStats } from '../lib/stats.js'
 import { todayKey, formatShort, dayKeyOf } from '../lib/date.js'
+import { GoalIcon } from '../lib/goalIcons.jsx'
 
 /* Finished goals, kept whole. Nothing here is scored or nudged — the archive
    is a record, not a backlog. Anything in it can come back, either fully
@@ -44,7 +45,7 @@ export default function ArchiveView({ goals, byGoal, settings, onOpen, onReactiv
               return (
                 <div className="archive-row" key={goal.id} style={{ '--goal-color': colorVar(goal.colorSlot) }}>
                   <button className="archive-id" onClick={() => onOpen(goal.id)}>
-                    <span className="goal-emoji" aria-hidden="true">{goal.emoji}</span>
+                    <span className="goal-emoji" aria-hidden="true"><GoalIcon id={goal.emoji} /></span>
                     <span style={{ minWidth: 0, textAlign: 'left' }}>
                       <span className="goal-card-name" style={{ display: 'block' }}>{goal.name}</span>
                       <span className="goal-card-meta">

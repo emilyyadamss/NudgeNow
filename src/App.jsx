@@ -3,6 +3,7 @@ import Dashboard from './views/Dashboard.jsx'
 import GoalDetail from './views/GoalDetail.jsx'
 import SettingsView from './views/SettingsView.jsx'
 import ArchiveView from './views/ArchiveView.jsx'
+import ActivityView from './views/ActivityView.jsx'
 import GoalEditor from './components/GoalEditor.jsx'
 import LogModal from './components/LogModal.jsx'
 import CompleteModal from './components/CompleteModal.jsx'
@@ -17,6 +18,12 @@ import { goalStats } from './lib/stats.js'
 import { indexEntries } from './lib/stats.js'
 import { scoreGoals, pickNudge } from './lib/nudge.js'
 import { todayKey } from './lib/date.js'
+import logoUrl from './assets/logo.svg'
+import logoLightUrl from './assets/logo-light.svg'
+import homeIcon from './assets/home.png'
+import homeIconLight from './assets/home-light.png'
+import settingsIcon from './assets/settings.png'
+import settingsIconLight from './assets/settings-light.png'
 
 export default function App() {
   const [state, setState] = useState(load)
@@ -238,6 +245,7 @@ export default function App() {
       if (e.key === 'n') { e.preventDefault(); openNewGoal() }
       if (e.key === 'l') { e.preventDefault(); openLog(view.name === 'goal' ? view.goalId : undefined) }
       if (e.key === 'g') { e.preventDefault(); setView({ name: 'dashboard' }) }
+      if (e.key === 'a') { e.preventDefault(); setView({ name: 'activity' }) }
       if (e.key === ',') { e.preventDefault(); setView({ name: 'settings' }) }
     }
     window.addEventListener('keydown', onKey)
@@ -251,10 +259,8 @@ export default function App() {
       <aside className="sidebar">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-              <circle cx="8" cy="8" r="3" fill="currentColor" />
-            </svg>
+            <img src={logoUrl} className="logo-for-light" alt="" />
+            <img src={logoLightUrl} className="logo-for-dark" alt="" />
           </span>
           NudgeNow
         </div>
@@ -264,8 +270,21 @@ export default function App() {
           aria-current={view.name === 'dashboard'}
           onClick={() => setView({ name: 'dashboard' })}
         >
-          <span aria-hidden="true">◎</span>
+          <span className="nav-icon" aria-hidden="true">
+            <img src={homeIcon} className="icon-for-light" alt="" />
+            <img src={homeIconLight} className="icon-for-dark" alt="" />
+          </span>
           <span className="nav-name">Today</span>
+        </button>
+
+        <button
+          className="nav-item"
+          aria-current={view.name === 'activity'}
+          onClick={() => setView({ name: 'activity' })}
+        >
+          <span aria-hidden="true">☰</span>
+          <span className="nav-name">Activity</span>
+          <span className="nav-meta">A</span>
         </button>
 
         {navGroups.map(([category, items]) => (
@@ -336,7 +355,10 @@ export default function App() {
             aria-current={view.name === 'settings'}
             onClick={() => setView({ name: 'settings' })}
           >
-            <span aria-hidden="true">⚙</span>
+            <span className="nav-icon" aria-hidden="true">
+              <img src={settingsIcon} className="icon-for-light" alt="" />
+              <img src={settingsIconLight} className="icon-for-dark" alt="" />
+            </span>
             <span className="nav-name">Settings</span>
             <span className="nav-meta">,</span>
           </button>
@@ -403,6 +425,30 @@ export default function App() {
             onToggleTask={toggleTask}
             onDeleteTask={deleteTask}
           />
+        )}
+
+        {view.name === 'activity' && (
+          <>
+            <div className="page-head">
+              <div>
+                <h1 className="page-title">Activity</h1>
+                <p className="page-sub">
+                  Everything you&rsquo;ve logged, newest first. Logged something twice, or against
+                  the wrong goal? Take it back out here.
+                </p>
+              </div>
+              {loggable.length > 0 && (
+                <button className="btn btn-primary" onClick={() => openLog()}>Log progress</button>
+              )}
+            </div>
+            <ActivityView
+              goals={goals}
+              entries={entries}
+              onDelete={deleteEntry}
+              onOpen={(id) => setView({ name: 'goal', goalId: id })}
+              onLog={openLog}
+            />
+          </>
         )}
 
         {view.name === 'archive' && (
