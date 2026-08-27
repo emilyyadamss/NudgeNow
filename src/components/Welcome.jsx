@@ -1,6 +1,26 @@
+import { motion } from 'motion/react'
 import { CircleCheckBig, Scale, ListChecks, RotateCcw } from 'lucide-react'
 import logoUrl from '../assets/logo.png'
 import logoLightUrl from '../assets/logo-light.png'
+
+const heroContainer = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+}
+
+const heroItem = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring', stiffness: 300, damping: 30 },
+  },
+}
 
 const FEATURES = [
   {
@@ -28,7 +48,12 @@ const FEATURES = [
 export default function Welcome({ onNewGoal, onLoadSample }) {
   return (
     <div className="welcome">
-      <div className="welcome-hero">
+      <motion.div
+        className="welcome-hero"
+        variants={heroContainer}
+        initial="hidden"
+        animate="show"
+      >
         <div className="welcome-brand">
           <span className="welcome-brand-mark" aria-hidden="true">
             <img src={logoUrl} className="logo-for-light" alt="" />
@@ -36,19 +61,21 @@ export default function Welcome({ onNewGoal, onLoadSample }) {
           </span>
           <span className="welcome-brand-name">Compassed</span>
         </div>
-        <h1 className="welcome-title">The goal tracker for people juggling more than one goal</h1>
-        <p className="welcome-sub">
+        <motion.h1 className="welcome-title" variants={heroItem}>
+          The goal tracker for people juggling more than one goal
+        </motion.h1>
+        <motion.p className="welcome-sub" variants={heroItem}>
           It's easy to fall into one goal and forget the others. Compassed keeps every goal in
           view, and each day points you at the one that's actually slipping — with the charts
           to prove it, not just a reminder.
-        </p>
-        <div className="welcome-actions">
+        </motion.p>
+        <motion.div className="welcome-actions" variants={heroItem}>
           <button className="btn btn-primary" onClick={onNewGoal}>+ Add your first goal</button>
           {onLoadSample && (
             <button className="btn" onClick={onLoadSample}>Try it with sample data</button>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       <div className="welcome-grid">
         {FEATURES.map(({ icon: Icon, title, body }) => (
