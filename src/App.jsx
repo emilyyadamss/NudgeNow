@@ -269,7 +269,7 @@ export default function App() {
             <img src={logoUrl} className="logo-for-light" alt="" />
             <img src={logoLightUrl} className="logo-for-dark" alt="" />
           </span>
-          NudgeNow
+          Compassed
         </div>
 
         <button

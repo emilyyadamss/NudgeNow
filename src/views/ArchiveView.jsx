@@ -20,7 +20,7 @@ export default function ArchiveView({ goals, byGoal, settings, onOpen, onReactiv
       <div className="empty">
         <h3>Nothing archived yet</h3>
         <p>
-          When you finish a goal you can archive it here, or keep it in revisit so NudgeNow
+          When you finish a goal you can archive it here, or keep it in revisit so Compassed
           taps you every so often to practise it.
         </p>
         <button className="btn" onClick={onBack}>Back to today</button>

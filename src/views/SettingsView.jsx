@@ -28,7 +28,7 @@ export default function SettingsView({
       <div className="page-head">
         <div>
           <h1 className="page-title">Settings</h1>
-          <p className="page-sub">Tune how NudgeNow decides what to point you at.</p>
+          <p className="page-sub">Tune how Compassed decides what to point you at.</p>
         </div>
       </div>
 
@@ -152,7 +152,7 @@ export default function SettingsView({
             <button
               className="btn"
               onClick={() => {
-                download(`nudgenow-${new Date().toISOString().slice(0, 10)}.json`, exportJSON(state))
+                download(`compassed-${new Date().toISOString().slice(0, 10)}.json`, exportJSON(state))
                 toast('Backup downloaded')
               }}
             >
