@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import Welcome from '../components/Welcome.jsx'
 import NudgeCard from '../components/NudgeCard.jsx'
 import GoalCard from '../components/GoalCard.jsx'
 import RevisitCard from '../components/RevisitCard.jsx'
@@ -12,7 +13,7 @@ const GOALS_UNIT = { one: 'goal', many: 'goals', abbr: '', precision: 0, step: 1
 
 export default function Dashboard({
   goals, entries, byGoal, byTask, ranked, revisit = [], pool = ranked, pick, settings, cycled,
-  onLog, onOpen, onCycle, onNewGoal, onComplete, onToggleTask,
+  onLog, onOpen, onCycle, onNewGoal, onComplete, onToggleTask, onLoadSample,
 }) {
   const today = todayKey()
   const [category, setCategory] = useState(null)   // null = every category
@@ -77,16 +78,7 @@ export default function Dashboard({
     [...ranked, ...revisit].filter((r) => normaliseCategory(r.goal.category) === c).length
 
   if (boardGoals.length === 0) {
-    return (
-      <div className="empty">
-        <h3>Nothing to track yet</h3>
-        <p>
-          Add the goals you keep meaning to get to. NudgeNow watches which ones go quiet
-          and points you back at them before they slip.
-        </p>
-        <button className="btn btn-primary" onClick={onNewGoal}>Add your first goal</button>
-      </div>
-    )
+    return <Welcome onNewGoal={onNewGoal} onLoadSample={onLoadSample} />
   }
 
   return (
@@ -222,7 +214,7 @@ export default function Dashboard({
             <div>
               <h2 className="card-title" style={{ fontSize: 15 }}>Keeping it fresh</h2>
               <div className="card-sub">
-                Finished goals on a practice interval — nudged only when one comes round
+                Finished goals on a practice interval. Nudged only when one comes round
                 {dueRevisit.length > 0
                   ? `. ${dueRevisit.length} due now`
                   : '. None due yet'}

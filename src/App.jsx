@@ -229,6 +229,13 @@ export default function App() {
     setEditing({ goal: newGoal(goals.length), isNew: true })
   }, [goals.length])
 
+  const loadSample = useCallback(() => {
+    const { goals: g, entries: e, tasks: t } = buildSample()
+    setState((s) => ({ ...s, goals: g, entries: e, tasks: t }))
+    setView({ name: 'dashboard' })
+    toast('Sample data loaded')
+  }, [toast])
+
   const openLog = useCallback((goalId, date) => {
     if (loggable.length === 0) { openNewGoal(); return }
     const target = goalId && loggable.some((g) => g.id === goalId) ? goalId : loggable[0].id
@@ -368,24 +375,26 @@ export default function App() {
       <main className="main" key={view.name + (view.goalId || '')}>
         {view.name === 'dashboard' && (
           <>
-            <div className="page-head">
-              <div>
-                <h1 className="page-title">Today</h1>
-                <p className="page-sub">
-                  {loggable.length === 0
-                    ? 'Let’s get your goals in.'
-                    : dueRevisit.length > 0
-                      ? `One goal gets your attention. ${dueRevisit.length} finished ${dueRevisit.length === 1 ? 'goal is' : 'goals are'} due for practice.`
-                      : 'One goal gets your attention. The rest keep their place.'}
-                </p>
-              </div>
-              {loggable.length > 0 && (
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn" onClick={openNewGoal}>+ New goal</button>
-                  <button className="btn btn-primary" onClick={() => openLog()}>Log progress</button>
+            {goals.length > 0 && (
+              <div className="page-head">
+                <div>
+                  <h1 className="page-title">Today</h1>
+                  <p className="page-sub">
+                    {loggable.length === 0
+                      ? 'Everything here is archived — nothing left to nudge.'
+                      : dueRevisit.length > 0
+                        ? `One goal gets your attention. ${dueRevisit.length} finished ${dueRevisit.length === 1 ? 'goal is' : 'goals are'} due for practice.`
+                        : 'One goal gets your attention. The rest keep their place.'}
+                  </p>
                 </div>
-              )}
-            </div>
+                {loggable.length > 0 && (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn" onClick={openNewGoal}>+ New goal</button>
+                    <button className="btn btn-primary" onClick={() => openLog()}>Log progress</button>
+                  </div>
+                )}
+              </div>
+            )}
             <Dashboard
               goals={activeGoals}
               entries={entries}
@@ -403,6 +412,7 @@ export default function App() {
               onNewGoal={openNewGoal}
               onComplete={(goal) => setFinishing({ goal, intent: 'complete' })}
               onToggleTask={toggleTask}
+              onLoadSample={loadSample}
             />
           </>
         )}
@@ -490,12 +500,7 @@ export default function App() {
             ranked={ranked}
             toast={toast}
             onImport={(next) => { setState(next); toast('Backup restored'); setView({ name: 'dashboard' }) }}
-            onLoadSample={() => {
-              const { goals: g, entries: e, tasks: t } = buildSample()
-              setState((s) => ({ ...s, goals: g, entries: e, tasks: t }))
-              setView({ name: 'dashboard' })
-              toast('Sample data loaded')
-            }}
+            onLoadSample={loadSample}
             onClearAll={() => {
               setState({ goals: [], entries: [], tasks: [], settings: { ...DEFAULT_SETTINGS, theme: settings.theme } })
               setView({ name: 'dashboard' })
