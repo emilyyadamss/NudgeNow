@@ -5,6 +5,7 @@ import SettingsView from './views/SettingsView.jsx'
 import ArchiveView from './views/ArchiveView.jsx'
 import ActivityView from './views/ActivityView.jsx'
 import GoalEditor from './components/GoalEditor.jsx'
+import MobileNav from './components/MobileNav.jsx'
 import LogModal from './components/LogModal.jsx'
 import CompleteModal from './components/CompleteModal.jsx'
 import { load, save } from './lib/storage.js'
@@ -263,6 +264,21 @@ export default function App() {
 
   return (
     <div className="app">
+      <div className="mobile-topbar brand">
+        <span className="brand-mark" aria-hidden="true">
+          <img src={logoUrl} className="logo-for-light" alt="" />
+          <img src={logoLightUrl} className="logo-for-dark" alt="" />
+        </span>
+        Compassed
+      </div>
+
+      <MobileNav
+        view={view}
+        setView={setView}
+        archivedCount={archived.length}
+        onNewGoal={openNewGoal}
+      />
+
       <aside className="sidebar">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
