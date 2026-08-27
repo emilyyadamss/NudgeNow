@@ -1,6 +1,6 @@
 import { CircleCheckBig, Scale, ListChecks, RotateCcw } from 'lucide-react'
-import logoUrl from '../assets/logo.svg'
-import logoLightUrl from '../assets/logo-light.svg'
+import logoUrl from '../assets/logo.png'
+import logoLightUrl from '../assets/logo-light.png'
 
 const FEATURES = [
   {
