@@ -6,7 +6,7 @@ const FEATURES = [
   {
     icon: CircleCheckBig,
     title: 'One nudge a day',
-    body: 'NudgeNow watches which goals go quiet and points you at the one that’s slipping — not everything at once.',
+    body: 'Compassed watches which goals go quiet and points you at the one that’s slipping — not everything at once.',
   },
   {
     icon: Scale,
@@ -34,11 +34,11 @@ export default function Welcome({ onNewGoal, onLoadSample }) {
             <img src={logoUrl} className="logo-for-light" alt="" />
             <img src={logoLightUrl} className="logo-for-dark" alt="" />
           </span>
-          <span className="welcome-brand-name">NudgeNow</span>
+          <span className="welcome-brand-name">Compassed</span>
         </div>
         <h1 className="welcome-title">The goal tracker for people juggling more than one goal</h1>
         <p className="welcome-sub">
-          It's easy to fall into one goal and forget the others. NudgeNow keeps every goal in
+          It's easy to fall into one goal and forget the others. Compassed keeps every goal in
           view, and each day points you at the one that's actually slipping — with the charts
           to prove it, not just a reminder.
         </p>

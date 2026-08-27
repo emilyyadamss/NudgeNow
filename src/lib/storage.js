@@ -1,5 +1,7 @@
 /* localStorage persistence. Everything lives on this machine — no account,
-   no network. Export/import gives you a portable JSON backup. */
+   no network. Export/import gives you a portable JSON backup.
+   Storage key stays 'nudgenow:v1' (the app's former name) so existing
+   users' saved data isn't orphaned by the rename to Compassed. */
 
 import { DEFAULT_SETTINGS, migrateGoal, migrateTask } from './model.js'
 
@@ -39,7 +41,7 @@ export function save(state) {
 
 export function exportJSON(state) {
   return JSON.stringify(
-    { app: 'NudgeNow', version: 1, exportedAt: new Date().toISOString(), ...state },
+    { app: 'Compassed', version: 1, exportedAt: new Date().toISOString(), ...state },
     null,
     2,
   )
@@ -48,7 +50,7 @@ export function exportJSON(state) {
 export function parseImport(text) {
   const parsed = JSON.parse(text)
   if (!Array.isArray(parsed.goals) || !Array.isArray(parsed.entries)) {
-    throw new Error('That file does not look like a NudgeNow backup.')
+    throw new Error('That file does not look like a Compassed backup.')
   }
   return {
     goals: parsed.goals.map(migrateGoal),
