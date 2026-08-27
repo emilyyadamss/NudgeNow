@@ -1,8 +1,10 @@
-import { Sparkles, Scale, ListChecks, RotateCcw } from 'lucide-react'
+import { CircleCheckBig, Scale, ListChecks, RotateCcw } from 'lucide-react'
+import logoUrl from '../assets/logo.svg'
+import logoLightUrl from '../assets/logo-light.svg'
 
 const FEATURES = [
   {
-    icon: Sparkles,
+    icon: CircleCheckBig,
     title: 'One nudge a day',
     body: 'NudgeNow watches which goals go quiet and points you at the one that’s slipping — not everything at once.',
   },
@@ -27,7 +29,13 @@ export default function Welcome({ onNewGoal, onLoadSample }) {
   return (
     <div className="welcome">
       <div className="welcome-hero">
-        <span className="welcome-eyebrow">Welcome to NudgeNow</span>
+        <div className="welcome-brand">
+          <span className="welcome-brand-mark" aria-hidden="true">
+            <img src={logoUrl} className="logo-for-light" alt="" />
+            <img src={logoLightUrl} className="logo-for-dark" alt="" />
+          </span>
+          <span className="welcome-brand-name">NudgeNow</span>
+        </div>
         <h1 className="welcome-title">The goal tracker for people juggling more than one goal</h1>
         <p className="welcome-sub">
           It's easy to fall into one goal and forget the others. NudgeNow keeps every goal in
