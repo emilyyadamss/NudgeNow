@@ -272,6 +272,13 @@ a { color: var(--accent); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.nav-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  display: grid;
+  gap: 4px;
+}
+
 .nav-item .nav-meta {
   font-size: 11px;
   color: var(--text-muted);
@@ -1317,10 +1324,17 @@ button.log-goal:hover .n { text-decoration: underline; text-underline-offset: 3p
     padding: 12px;
     gap: 6px;
   }
-  .brand { padding: 0 8px 0 4px; flex: none; }
+  .brand { width: 100%; padding: 0 4px 8px; flex: none; }
   .nav-label { display: none; }
-  .nav-item { width: auto; flex: none; }
+  .nav-item {
+    width: auto;
+    flex: none;
+    background: var(--surface-2);
+    padding: 7px 12px;
+    font-size: 13px;
+  }
   .nav-item .nav-meta { display: none; }
+  .nav-footer { display: contents; margin-top: 0; padding-top: 0; }
   .main { padding: 20px 16px 60px; }
   .nudge-title { font-size: 24px; }
   .row-2, .row-3 { grid-template-columns: 1fr; }

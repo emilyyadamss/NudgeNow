@@ -351,7 +351,7 @@ export default function App() {
           </>
         )}
 
-        <div style={{ marginTop: 'auto', paddingTop: 16, display: 'grid', gap: 4 }}>
+        <div className="nav-footer">
           <button className="nav-item" onClick={openNewGoal}>
             <span aria-hidden="true">＋</span>
             <span className="nav-name">New goal</span>
