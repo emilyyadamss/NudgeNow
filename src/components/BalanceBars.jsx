@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { colorVar, formatAmount, unitFor, unitWord } from '../lib/model.js'
 import { useMeasure, barPath } from '../lib/chart.js'
 import ChartTooltip from './ChartTooltip.jsx'
+import { GoalIcon } from '../lib/goalIcons.jsx'
 
 /* Every goal on ONE axis: progress as a share of its own target. Different
    units (hours, pages, km) become comparable by indexing to a common base,
@@ -81,7 +82,6 @@ export default function BalanceBars({ ranked, settings, showTable }) {
                     textAnchor="end"
                     pointerEvents="none"
                   >
-                    {r.goal.emoji}{' '}
                     {r.goal.name.length > nameChars ? `${r.goal.name.slice(0, nameChars - 1)}…` : r.goal.name}
                   </text>
                   {/* track: a lighter step of the bar's own hue */}
@@ -139,7 +139,11 @@ export default function BalanceBars({ ranked, settings, showTable }) {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.goal.id}>
-                  <td>{r.goal.emoji} {r.goal.name}</td>
+                  <td>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <GoalIcon id={r.goal.emoji} size={14} /> {r.goal.name}
+                    </span>
+                  </td>
                   <td className="num">{formatAmount(r.stats.rolling, r.unit)} {r.unit.abbr}</td>
                   <td className="num">{formatAmount(r.stats.target, r.unit)} {r.unit.abbr}</td>
                   <td className="num">{Math.round(r.pct * 100)}%</td>

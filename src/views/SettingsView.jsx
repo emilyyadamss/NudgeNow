@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { colorVar } from '../lib/model.js'
 import { exportJSON, parseImport, download } from '../lib/storage.js'
+import { GoalIcon } from '../lib/goalIcons.jsx'
 
 function Row({ title, sub, children }) {
   return (
@@ -82,8 +83,11 @@ export default function SettingsView({
                     width: 9, height: 9, borderRadius: 3, flex: 'none',
                     background: colorVar(r.goal.colorSlot),
                   }} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {r.goal.emoji} {r.goal.name}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
+                    <GoalIcon id={r.goal.emoji} size={13} style={{ flex: 'none' }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {r.goal.name}
+                    </span>
                   </span>
                 </span>
                 <span className="hint" style={{ fontVariantNumeric: 'tabular-nums' }}>
@@ -124,7 +128,7 @@ export default function SettingsView({
             </div>
           </Row>
 
-          <Row title="Show data tables" sub="A readable table under every chart — also what screen readers get">
+          <Row title="Show data tables" sub="A readable table under every chart, also what screen readers get">
             <button
               className="toggle"
               aria-pressed={settings.showTables}
@@ -193,7 +197,7 @@ export default function SettingsView({
           </div>
 
           <p className="hint" style={{ marginTop: 12 }}>
-            Nothing leaves this device. Export a backup before clearing your browser data — that
+            Nothing leaves this device. Export a backup before clearing your browser data, that
             is the only copy.
           </p>
         </div>

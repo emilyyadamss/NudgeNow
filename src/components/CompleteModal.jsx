@@ -4,6 +4,7 @@ import {
   STATUS, REVISIT_PRESETS, DEFAULT_REVISIT_EVERY, revisitEvery,
   colorVar, unitFor, formatAmount, unitWord,
 } from '../lib/model.js'
+import { GoalIcon } from '../lib/goalIcons.jsx'
 
 /* Finishing a goal asks one question: is this done, or done-for-now?
    Archiving files it away for good. Revisit keeps it in the rotation on a long
@@ -40,7 +41,7 @@ export default function CompleteModal({ goal, stats, intent = 'complete', onConf
       }
     >
       <div className="done-banner" style={{ '--goal-color': color }}>
-        <span className="goal-emoji" aria-hidden="true">{goal.emoji}</span>
+        <span className="goal-emoji" aria-hidden="true"><GoalIcon id={goal.emoji} /></span>
         <div>
           <div className="t">{formatAmount(stats.total, unit)} {unitWord(stats.total, unit)} logged</div>
           <div className="s">

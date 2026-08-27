@@ -1,5 +1,6 @@
 import { colorVar, revisitLabel } from '../lib/model.js'
 import { relativeDays } from '../lib/date.js'
+import { GoalIcon } from '../lib/goalIcons.jsx'
 
 /* A revisit goal has no target to chase, so the card answers a different
    question: how long until this needs touching again? */
@@ -10,7 +11,7 @@ export default function RevisitCard({ goal, stats, revisit, onOpen, onLog }) {
   return (
     <div className={`goal-card revisit-card${due ? ' is-due' : ''}`} style={{ '--goal-color': color }}>
       <button className="goal-card-top" onClick={() => onOpen(goal.id)} style={{ width: '100%' }}>
-        <span className="goal-emoji" aria-hidden="true">{goal.emoji}</span>
+        <span className="goal-emoji" aria-hidden="true"><GoalIcon id={goal.emoji} /></span>
         <span style={{ minWidth: 0, textAlign: 'left' }}>
           <span className="goal-card-name" style={{ display: 'block' }}>{goal.name}</span>
           <span className="goal-card-meta">

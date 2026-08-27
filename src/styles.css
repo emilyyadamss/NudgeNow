@@ -194,12 +194,22 @@ a { color: var(--accent); }
 }
 .brand-mark {
   width: 26px; height: 26px;
-  border-radius: 8px;
   display: grid; place-items: center;
-  background: var(--accent);
-  color: #fff;
   flex: none;
 }
+.brand-mark img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+}
+.brand-mark .logo-for-dark { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .brand-mark .logo-for-light { display: none; }
+  :root:where(:not([data-theme="light"])) .brand-mark .logo-for-dark { display: block; }
+}
+
+:root[data-theme="dark"] .brand-mark .logo-for-light { display: none; }
+:root[data-theme="dark"] .brand-mark .logo-for-dark { display: block; }
 
 .nav-label {
   font-size: 11px;
@@ -234,6 +244,28 @@ a { color: var(--accent); }
   flex: none;
   background: var(--goal-color, var(--accent));
 }
+.nav-item .nav-icon {
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.nav-item .nav-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.nav-item .nav-icon .icon-for-dark { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .nav-item .nav-icon .icon-for-light { display: none; }
+  :root:where(:not([data-theme="light"])) .nav-item .nav-icon .icon-for-dark { display: block; }
+}
+
+:root[data-theme="dark"] .nav-item .nav-icon .icon-for-light { display: none; }
+:root[data-theme="dark"] .nav-item .nav-icon .icon-for-dark { display: block; }
+
 .nav-item .nav-name {
   flex: 1;
   overflow: hidden;
@@ -517,6 +549,28 @@ textarea.input { height: auto; padding: 9px 11px; resize: vertical; min-height: 
   color: var(--text-secondary);
   margin-bottom: 10px;
 }
+.nudge-eyebrow .eyebrow-icon {
+  width: 13px;
+  height: 13px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.nudge-eyebrow .eyebrow-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.nudge-eyebrow .eyebrow-icon .icon-for-dark { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .nudge-eyebrow .eyebrow-icon .icon-for-light { display: none; }
+  :root:where(:not([data-theme="light"])) .nudge-eyebrow .eyebrow-icon .icon-for-dark { display: block; }
+}
+
+:root[data-theme="dark"] .nudge-eyebrow .eyebrow-icon .icon-for-light { display: none; }
+:root[data-theme="dark"] .nudge-eyebrow .eyebrow-icon .icon-for-dark { display: block; }
+
 .nudge-title {
   font-size: 30px;
   letter-spacing: -0.025em;
@@ -956,6 +1010,54 @@ input[type="range"]::-moz-range-thumb {
 .entry-row .e-note { color: var(--text-secondary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .entry-row .e-del { opacity: 0; transition: opacity 140ms var(--ease); }
 .entry-row:hover .e-del { opacity: 1; }
+.entry-row .e-del:focus-visible { opacity: 1; }
+
+/* activity log — every entry across every goal, and the two-tap delete that
+   keeps a stray click from costing you a day's work */
+.log-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.log-filters .log-pick { width: auto; min-width: 170px; max-width: 260px; }
+.log-filters .log-search { width: auto; flex: 1 1 160px; min-width: 130px; }
+
+.log-row .log-goal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 186px;
+  flex: none;
+  min-width: 0;
+  text-align: left;
+  color: var(--text-primary);
+  font-weight: 550;
+}
+.log-row .log-goal .dot {
+  width: 8px; height: 8px;
+  border-radius: 999px;
+  flex: none;
+  background: var(--goal-color, var(--accent));
+}
+.log-row .log-goal .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+button.log-goal:hover .n { text-decoration: underline; text-underline-offset: 3px; }
+.log-row .log-goal.is-orphan { color: var(--text-muted); font-style: italic; }
+
+.log-row .log-tag { flex: none; }
+.log-row .log-time {
+  width: 66px;
+  flex: none;
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.log-confirm { display: flex; gap: 4px; flex: none; }
+/* An armed row stays visible even when the pointer moves off it — the choice
+   is the user's to finish or cancel, not the mouse's. */
+.log-row.is-armed { background: color-mix(in oklab, var(--critical) 7%, transparent); }
+.log-row.is-armed .e-del { opacity: 1; }
 
 /* task list — the steps that make up a goal */
 .task-row {
@@ -1124,4 +1226,7 @@ input[type="range"]::-moz-range-thumb {
   .row-2, .row-3 { grid-template-columns: 1fr; }
   .task-add > .input { flex: 1 1 100%; }
   .task-when { display: none; }
+  .log-row .log-goal { width: 130px; }
+  .log-row .log-time { display: none; }
+  .log-filters .log-search { flex: 1 1 100%; }
 }

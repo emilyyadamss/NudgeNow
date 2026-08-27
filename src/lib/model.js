@@ -1,5 +1,7 @@
 /* Goal / entry shapes, unit presets, and the categorical color slots. */
 
+import { ICON_CHOICES, normaliseIconId } from './goalIcons.jsx'
+
 /* The eight validated categorical slots, in fixed order. A goal keeps its slot
    for life — color follows the entity, never its position in a list. */
 export const COLOR_SLOTS = [
@@ -136,10 +138,7 @@ export function withStatus(goal, status, patch = {}) {
   }
 }
 
-export const EMOJI_CHOICES = [
-  '🎯', '📚', '💻', '🗣️', '🎸', '🏃', '🧘', '✍️', '🎨', '🧪',
-  '💪', '🍳', '📷', '🌱', '🧠', '💤', '🎹', '📈', '🗂️', '🕯️',
-]
+export { ICON_CHOICES } from './goalIcons.jsx'
 
 export function unitFor(goal) {
   const preset = UNIT_PRESETS.find((u) => u.id === goal.unitId) || UNIT_PRESETS[0]
@@ -175,7 +174,7 @@ export function newGoal(index = 0) {
     id: crypto.randomUUID(),
     name: '',
     category: '',
-    emoji: EMOJI_CHOICES[index % EMOJI_CHOICES.length],
+    emoji: ICON_CHOICES[index % ICON_CHOICES.length],
     colorSlot: (index % 8) + 1,
     unitId: 'hours',
     unitOne: '',
@@ -197,6 +196,7 @@ export function newGoal(index = 0) {
 export function migrateGoal(goal) {
   return {
     ...goal,
+    emoji: normaliseIconId(goal.emoji),
     status: statusOf(goal),
     archived: statusOf(goal) === STATUS.DONE,
     revisitEvery: goal.revisitEvery ?? DEFAULT_REVISIT_EVERY,

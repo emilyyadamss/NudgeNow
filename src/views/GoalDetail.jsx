@@ -8,6 +8,7 @@ import {
 } from '../lib/model.js'
 import { goalStats, revisitStatus } from '../lib/stats.js'
 import { formatShort, relativeDays, todayKey, dayKeyOf } from '../lib/date.js'
+import { GoalIcon } from '../lib/goalIcons.jsx'
 
 export default function GoalDetail({
   goal, entries, days, tasks = [], settings,
@@ -37,8 +38,8 @@ export default function GoalDetail({
     <>
       <div className="page-head">
         <div style={{ display: 'flex', gap: 14, alignItems: 'center', minWidth: 0 }}>
-          <span className="goal-emoji" style={{ '--goal-color': color, width: 46, height: 46, fontSize: 22, borderRadius: 14 }} aria-hidden="true">
-            {goal.emoji}
+          <span className="goal-emoji" style={{ '--goal-color': color, width: 46, height: 46, borderRadius: 14 }} aria-hidden="true">
+            <GoalIcon id={goal.emoji} size={22} />
           </span>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>

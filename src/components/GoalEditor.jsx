@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import Modal from './Modal.jsx'
 import {
-  COLOR_SLOTS, colorVar, EMOJI_CHOICES, UNIT_PRESETS, unitFor, unitWord,
+  COLOR_SLOTS, colorVar, ICON_CHOICES, UNIT_PRESETS, unitFor, unitWord,
   CATEGORY_SUGGESTIONS, categoryList, normaliseCategory,
   STATUS, STATUS_LABELS, REVISIT_PRESETS, statusOf, revisitEvery, withStatus,
 } from '../lib/model.js'
+import { GoalIcon } from '../lib/goalIcons.jsx'
 
 const STATUS_HINTS = {
   [STATUS.ACTIVE]: 'Nudged on how quiet it has gone and how far behind target it is.',
-  [STATUS.REVISIT]: 'Finished, but kept warm — nudged only when the interval below has elapsed.',
+  [STATUS.REVISIT]: 'Finished, but kept warm. Nudged only when the interval below has elapsed.',
   [STATUS.DONE]: 'Filed away. Never nudged, and left out of every count.',
 }
 
@@ -71,7 +72,7 @@ export default function GoalEditor({ goal, isNew, allGoals = [], onSave, onDelet
       </div>
 
       <div className="field">
-        <label htmlFor="g-cat">Category <span className="hint">(optional — for grouping only)</span></label>
+        <label htmlFor="g-cat">Category <span className="hint">(optional, for grouping only)</span></label>
         <input
           id="g-cat"
           className="input"
@@ -101,7 +102,7 @@ export default function GoalEditor({ goal, isNew, allGoals = [], onSave, onDelet
       </div>
 
       <div className="field">
-        <label htmlFor="g-why">Why it matters <span className="hint">(optional — shown on the nudge)</span></label>
+        <label htmlFor="g-why">Why it matters <span className="hint">(optional, shown on the nudge)</span></label>
         <input
           id="g-why"
           className="input"
@@ -219,9 +220,9 @@ export default function GoalEditor({ goal, isNew, allGoals = [], onSave, onDelet
       <div className="field">
         <span className="label">Icon</span>
         <div className="emoji-picker">
-          {EMOJI_CHOICES.map((e) => (
-            <button key={e} aria-pressed={draft.emoji === e} aria-label={`Icon ${e}`} onClick={() => set({ emoji: e })}>
-              {e}
+          {ICON_CHOICES.map((id) => (
+            <button key={id} aria-pressed={draft.emoji === id} aria-label={`Icon ${id}`} onClick={() => set({ emoji: id })}>
+              <GoalIcon id={id} size={16} />
             </button>
           ))}
         </div>
