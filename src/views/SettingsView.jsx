@@ -80,7 +80,7 @@ export default function SettingsView({
                 <span className="e-date" style={{ width: 26 }}>{i + 1}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
                   <span style={{
-                    width: 9, height: 9, borderRadius: 3, flex: 'none',
+                    width: 9, height: 9, borderRadius: 999, flex: 'none',
                     background: colorVar(r.goal.colorSlot),
                   }} />
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>

@@ -38,7 +38,7 @@ export default function GoalDetail({
     <>
       <div className="page-head">
         <div style={{ display: 'flex', gap: 14, alignItems: 'center', minWidth: 0 }}>
-          <span className="goal-emoji" style={{ '--goal-color': color, width: 46, height: 46, borderRadius: 14 }} aria-hidden="true">
+          <span className="goal-emoji" style={{ '--goal-color': color, width: 46, height: 46, borderRadius: 999 }} aria-hidden="true">
             <GoalIcon id={goal.emoji} size={22} />
           </span>
           <div style={{ minWidth: 0 }}>
