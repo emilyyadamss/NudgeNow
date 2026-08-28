@@ -88,7 +88,10 @@ export default function Welcome({ onNewGoal, onLoadSample }) {
       </div>
 
       <p className="welcome-note">
-        Everything lives in your browser's local storage! No account, and nothing leaves your machine.
+        Your data stays on this device. Compassed© saves everything to your browser's local
+        storage. There's no account, no server, and nothing is ever sent anywhere or
+        tracked. Use Settings to export a backup, since clearing your browser's data or
+        switching devices means starting fresh.
       </p>
     </div>
   )

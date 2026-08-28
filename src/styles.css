@@ -700,8 +700,11 @@ textarea.input {
 .welcome-feature p { font-size: 13px; line-height: 1.55; color: var(--text-secondary); }
 
 .welcome-note {
+  max-width: 480px;
+  margin: 0 auto;
   text-align: center;
   font-size: 12.5px;
+  line-height: 1.6;
   color: var(--text-muted);
 }
 
