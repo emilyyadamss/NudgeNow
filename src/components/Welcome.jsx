@@ -62,7 +62,7 @@ export default function Welcome({ onNewGoal, onLoadSample }) {
           <span className="welcome-brand-name">Compassed</span>
         </div>
         <motion.h1 className="welcome-title" variants={heroItem}>
-          The goal tracker for people juggling more than one goal
+          The goal tracker to complete every goal without forgetting any
         </motion.h1>
         <motion.p className="welcome-sub" variants={heroItem}>
           It's easy to fall into one goal and forget the others. Compassed keeps every goal in
