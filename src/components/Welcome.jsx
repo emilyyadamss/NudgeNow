@@ -70,7 +70,7 @@ export default function Welcome({ onNewGoal, onLoadSample }) {
           to prove it, not just a reminder.
         </motion.p>
         <motion.div className="welcome-actions" variants={heroItem}>
-          <button className="btn btn-primary" onClick={onNewGoal}>+ Add your first goal</button>
+          <button className="btn btn-primary" onClick={onNewGoal}>Add your first goal</button>
           {onLoadSample && (
             <button className="btn" onClick={onLoadSample}>Try it with sample data</button>
           )}

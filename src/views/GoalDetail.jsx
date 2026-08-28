@@ -75,7 +75,7 @@ export default function GoalDetail({
             <button className="btn btn-primary" onClick={() => onReactivate(goal.id)}>Reactivate</button>
           ) : (
             <button className="btn btn-primary" onClick={() => onLog(goal.id)}>
-              {status === STATUS.REVISIT ? '+ Log practice' : '+ Log progress'}
+              {status === STATUS.REVISIT ? 'Log practice' : 'Log progress'}
             </button>
           )}
         </div>

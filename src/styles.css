@@ -1000,6 +1000,7 @@ textarea.input {
 .target-line { stroke: var(--axis); stroke-width: 1; stroke-linecap: round; }
 .chart-label { font-size: 11.5px; font-weight: 600; fill: var(--text-primary); }
 .chart-label-muted { font-size: 11px; fill: var(--text-muted); }
+.chart-label-oncomplete { font-size: 11px; font-weight: 600; fill: var(--surface-1); }
 
 .tooltip {
   position: absolute;

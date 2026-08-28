@@ -53,7 +53,7 @@ export default function GoalCard({ goal, stats, trend, tasks = [], onOpen, onLog
               ✓ Finish
             </button>
           )}
-          <button className="btn btn-sm" onClick={() => onLog(goal.id)}>+ Log</button>
+          <button className="btn btn-sm" onClick={() => onLog(goal.id)}>Log</button>
         </div>
       </div>
     </div>

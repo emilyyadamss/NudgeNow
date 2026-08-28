@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Trash2 } from 'lucide-react'
 import Modal from './Modal.jsx'
 import {
   COLOR_SLOTS, colorVar, ICON_CHOICES, UNIT_PRESETS, unitFor, unitWord,
@@ -48,8 +49,14 @@ export default function GoalEditor({ goal, isNew, allGoals = [], onSave, onDelet
       footer={
         <>
           {!isNew && (
-            <button className="btn btn-ghost btn-danger" onClick={() => onDelete(draft.id)} style={{ marginRight: 'auto' }}>
-              Delete
+            <button
+              className="btn btn-ghost btn-danger btn-icon"
+              onClick={() => onDelete(draft.id)}
+              aria-label="Delete goal"
+              title="Delete goal"
+              style={{ marginRight: 'auto' }}
+            >
+              <Trash2 size={16} />
             </button>
           )}
           <button className="btn" onClick={onClose}>Cancel</button>
@@ -65,7 +72,7 @@ export default function GoalEditor({ goal, isNew, allGoals = [], onSave, onDelet
           id="g-name"
           className="input"
           value={draft.name}
-          placeholder="Japanese, Side projects, Running…"
+          placeholder="French, Udemy Course, Running…"
           onChange={(e) => set({ name: e.target.value })}
           onKeyDown={(e) => { if (e.key === 'Enter' && valid) submit() }}
         />
@@ -102,7 +109,7 @@ export default function GoalEditor({ goal, isNew, allGoals = [], onSave, onDelet
       </div>
 
       <div className="field">
-        <label htmlFor="g-why">Why it matters <span className="hint">(optional, shown on the nudge)</span></label>
+        <label htmlFor="g-why">Why it matters <span className="hint">(optional, shown on the compassed rec)</span></label>
         <input
           id="g-why"
           className="input"

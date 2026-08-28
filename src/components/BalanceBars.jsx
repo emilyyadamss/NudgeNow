@@ -66,7 +66,8 @@ export default function BalanceBars({ ranked, settings, showTable }) {
 
             {rows.map((r, i) => {
               const y = PAD_T + i * ROW + (ROW - BAR_H) / 2
-              const color = colorVar(r.goal.colorSlot)
+              const met = r.pct >= 1
+              const color = met ? 'var(--good)' : colorVar(r.goal.colorSlot)
               const w = x(r.pct) - PAD_L
               const dim = hover && hover.goal.id !== r.goal.id
               return (
@@ -91,6 +92,16 @@ export default function BalanceBars({ ranked, settings, showTable }) {
                     pointerEvents="none"
                   />
                   <path d={barPath(PAD_L, y, w, BAR_H)} fill={color} pointerEvents="none" />
+                  {met && w > 70 && (
+                    <text
+                      className="chart-label-oncomplete"
+                      x={x(r.pct) - 8} y={y + BAR_H / 2 + 4}
+                      textAnchor="end"
+                      pointerEvents="none"
+                    >
+                      ✓ complete
+                    </text>
+                  )}
                   <text
                     className="chart-label"
                     x={x(r.pct) + 9} y={y + BAR_H / 2 + 4}

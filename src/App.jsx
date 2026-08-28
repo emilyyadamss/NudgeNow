@@ -405,7 +405,7 @@ export default function App() {
                 </div>
                 {loggable.length > 0 && (
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="btn" onClick={openNewGoal}>+ New goal</button>
+                    <button className="btn" onClick={openNewGoal}>New goal</button>
                     <button className="btn btn-primary" onClick={() => openLog()}>Log progress</button>
                   </div>
                 )}

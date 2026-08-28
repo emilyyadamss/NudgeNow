@@ -44,7 +44,7 @@ export default function RevisitCard({ goal, stats, revisit, onOpen, onLog }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <span className="hint">Kept warm, not chased</span>
         <button className="btn btn-sm" onClick={() => onLog(goal.id)}>
-          {due ? 'Practise now' : '+ Log'}
+          {due ? 'Practise now' : 'Log'}
         </button>
       </div>
     </div>

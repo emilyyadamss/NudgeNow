@@ -173,7 +173,7 @@ export default function Dashboard({
 
       <div className="card-head" style={{ marginTop: 24 }}>
         <h2 className="card-title" style={{ fontSize: 15 }}>Your goals</h2>
-        <button className="btn btn-sm" onClick={onNewGoal}>+ New goal</button>
+        <button className="btn btn-sm" onClick={onNewGoal}>New goal</button>
       </div>
 
       {cardGroups.map(([cat, items]) => (
@@ -204,7 +204,7 @@ export default function Dashboard({
 
       {scoped.length === 0 && scopedRevisit.length > 0 && (
         <p className="hint" style={{ marginTop: 4 }}>
-          Nothing active here — everything in this view is finished and being kept warm below.
+          Nothing active here, everything in this view is finished and being kept warm below.
         </p>
       )}
 
