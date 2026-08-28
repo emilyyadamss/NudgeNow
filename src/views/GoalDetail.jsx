@@ -202,8 +202,8 @@ export default function GoalDetail({
               <div className="card-title">Consistency</div>
               <div className="card-sub">
               {status === STATUS.DONE
-                ? 'Darker means a bigger day — the full record, kept as it was'
-                : 'Darker means a bigger day — click any square to log it'}
+                ? 'Darker means a bigger day, the full record, kept as it was'
+                : 'Darker means a bigger day, click any square to log it'}
             </div>
             </div>
           </div>

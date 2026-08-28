@@ -40,7 +40,7 @@
   --critical: #d03b3b;
   --good-text: #006300;
 
-  --accent: var(--series-1);
+  --accent: #3c764a;
 
   --radius-sm: 6px;
   --radius:    10px;
@@ -81,6 +81,8 @@
     --series-8: #e66767;
 
     --good-text: #0ca30c;
+
+    --accent: #0f5723;
   }
 }
 
@@ -111,6 +113,8 @@
   --series-8: #e66767;
 
   --good-text: #0ca30c;
+
+  --accent: #052d0d;
 }
 
 /* ============================================================ reset */

@@ -3,17 +3,20 @@ import { motion, AnimatePresence } from 'motion/react'
 import { Plus, Home, ListChecks, Archive, Settings } from 'lucide-react'
 
 const menuVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.045, delayChildren: 0.02 } },
+  hidden: { transition: { staggerChildren: 0.035, staggerDirection: -1 } },
+  show: { transition: { staggerChildren: 0.05, delayChildren: 0.05 } },
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 14, scale: 0.85 },
+  hidden: { opacity: 0, y: 16, scale: 0.9 },
   show: {
     opacity: 1, y: 0, scale: 1,
-    transition: { type: 'spring', stiffness: 420, damping: 28 },
+    transition: { type: 'spring', stiffness: 280, damping: 24, mass: 0.7 },
   },
-  exit: { opacity: 0, y: 10, scale: 0.85, transition: { duration: 0.12 } },
+  exit: {
+    opacity: 0, y: 10, scale: 0.92,
+    transition: { duration: 0.16, ease: [0.4, 0, 1, 1] },
+  },
 }
 
 export default function MobileNav({ view, setView, archivedCount, onNewGoal }) {
@@ -39,9 +42,8 @@ export default function MobileNav({ view, setView, archivedCount, onNewGoal }) {
           <motion.div
             className="mobile-fab-backdrop"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            animate={{ opacity: 1, transition: { duration: 0.22, ease: 'easeOut' } }}
+            exit={{ opacity: 0, transition: { duration: 0.18, ease: 'easeIn' } }}
             onClick={close}
           />
         )}
@@ -63,7 +65,8 @@ export default function MobileNav({ view, setView, archivedCount, onNewGoal }) {
                 variants={itemVariants}
                 exit="exit"
                 aria-current={view.name === key}
-                whileTap={{ scale: 0.92 }}
+                style={{ transformOrigin: 'right bottom' }}
+                whileTap={{ scale: 0.94, transition: { duration: 0.1 } }}
                 onClick={() => { close(); onSelect ? onSelect() : setView({ name: key }) }}
               >
                 <Icon size={17} strokeWidth={2.25} />
@@ -79,13 +82,13 @@ export default function MobileNav({ view, setView, archivedCount, onNewGoal }) {
         className="mobile-fab-trigger"
         aria-label={open ? 'Close menu' : 'Open menu'}
         aria-expanded={open}
-        whileTap={{ scale: 0.9 }}
+        whileTap={{ scale: 0.92, transition: { duration: 0.1 } }}
         onClick={() => setOpen((o) => !o)}
       >
         <motion.span
           className="mobile-fab-icon"
           animate={{ rotate: open ? 45 : 0 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 26 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 22, mass: 0.6 }}
         >
           <Plus size={24} strokeWidth={2.25} />
         </motion.span>
