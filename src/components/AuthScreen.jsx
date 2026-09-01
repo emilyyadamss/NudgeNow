@@ -8,8 +8,8 @@ const MODES = {
   signup: { title: 'Create an account', cta: 'Sign up', switchTo: 'signin', switchLabel: 'Already have an account? Sign in' },
 }
 
-export default function AuthScreen() {
-  const [mode, setMode] = useState('signin')
+export default function AuthScreen({ initialMode = 'signin', onBack }) {
+  const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -63,6 +63,15 @@ export default function AuthScreen() {
   return (
     <div className="auth-screen">
       <div className="card auth-card">
+        {onBack && (
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ marginBottom: 10 }}
+            onClick={onBack}
+          >
+            ← Back
+          </button>
+        )}
         <div className="brand" style={{ marginBottom: 18 }}>
           <span className="brand-mark" aria-hidden="true">
             <img src={logoUrl} className="logo-for-light" alt="" />

@@ -9,6 +9,7 @@ import MobileNav from './components/MobileNav.jsx'
 import LogModal from './components/LogModal.jsx'
 import CompleteModal from './components/CompleteModal.jsx'
 import AuthScreen from './components/AuthScreen.jsx'
+import LandingScreen from './components/LandingScreen.jsx'
 import Loader from './components/Loader.jsx'
 import { supabase } from './lib/supabaseClient.js'
 import {
@@ -37,6 +38,8 @@ const EMPTY_STATE = { goals: [], entries: [], tasks: [], settings: { ...DEFAULT_
 export default function App() {
   // undefined = auth not checked yet, null = signed out, object = signed in.
   const [session, setSession] = useState(undefined)
+  // Pre-auth screen: 'landing' shows the marketing page, 'signin'/'signup' show the auth form.
+  const [authView, setAuthView] = useState('landing')
   const [state, setState] = useState(EMPTY_STATE)
   const [dataLoading, setDataLoading] = useState(false)
   const [view, setView] = useState({ name: 'dashboard' })
@@ -332,7 +335,20 @@ export default function App() {
     return <div className="auth-screen"><Loader /></div>
   }
   if (!session) {
-    return <AuthScreen />
+    if (authView === 'landing') {
+      return (
+        <LandingScreen
+          onSignUp={() => setAuthView('signup')}
+          onSignIn={() => setAuthView('signin')}
+        />
+      )
+    }
+    return (
+      <AuthScreen
+        initialMode={authView}
+        onBack={() => setAuthView('landing')}
+      />
+    )
   }
   if (dataLoading) {
     return <div className="auth-screen"><Loader label="Loading your goals…" /></div>

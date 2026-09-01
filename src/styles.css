@@ -603,6 +603,14 @@ textarea.input {
   gap: 14px;
 }
 
+/* ============================================================ landing / pre-auth homepage */
+
+.landing-screen {
+  min-height: 100%;
+  overflow-y: auto;
+  padding: 24px;
+}
+
 /* ============================================================ welcome / first-run homepage */
 
 .welcome {
