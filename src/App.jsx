@@ -609,6 +609,11 @@ export default function App() {
             toast={toast}
             email={session.user.email}
             onSignOut={() => supabase.auth.signOut()}
+            onDeleteAccount={async () => {
+              const { error } = await supabase.functions.invoke('delete-account')
+              if (error) throw error
+              await supabase.auth.signOut()
+            }}
             onImport={(next) => {
               setState(next)
               replaceAll(userId, next).catch(syncFail('Restored locally, but the cloud sync failed'))

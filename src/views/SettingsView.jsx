@@ -17,10 +17,12 @@ function Row({ title, sub, children }) {
 
 export default function SettingsView({
   settings, setSettings, state, ranked,
-  onImport, onLoadSample, onClearAll, toast, email, onSignOut,
+  onImport, onLoadSample, onClearAll, toast, email, onSignOut, onDeleteAccount,
 }) {
   const fileRef = useRef(null)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const w = settings.recencyWeight
 
   return (
@@ -39,8 +41,43 @@ export default function SettingsView({
               <div className="card-title">Account</div>
               <div className="card-sub">Signed in as {email}</div>
             </div>
-            <button className="btn btn-ghost" onClick={onSignOut}>Sign out</button>
+            <div className="button-row">
+              <button className="btn btn-ghost" onClick={onSignOut}>Sign out</button>
+              {confirmDelete ? (
+                <>
+                  <button
+                    className="btn btn-danger"
+                    disabled={deleting}
+                    onClick={async () => {
+                      setDeleting(true)
+                      try {
+                        await onDeleteAccount()
+                      } catch (err) {
+                        toast(err.message || 'Could not delete your account, try again')
+                        setDeleting(false)
+                        setConfirmDelete(false)
+                      }
+                    }}
+                  >
+                    {deleting ? 'Deleting…' : 'Yes, delete my account'}
+                  </button>
+                  <button className="btn btn-ghost" disabled={deleting} onClick={() => setConfirmDelete(false)}>
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button className="btn btn-ghost btn-danger" onClick={() => setConfirmDelete(true)}>
+                  Delete account
+                </button>
+              )}
+            </div>
           </div>
+          {confirmDelete && (
+            <p className="hint" style={{ marginTop: 12, color: 'var(--error-text)' }}>
+              This permanently deletes your account and all {state.goals.length} goals and{' '}
+              {state.entries.length} entries. There's no undo — export a backup first if you want one.
+            </p>
+          )}
         </div>
 
         <div className="card">
