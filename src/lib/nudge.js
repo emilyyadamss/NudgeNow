@@ -102,7 +102,7 @@ export function explainNudge({ goal, stats, recency, deficit, fresh, mode, revis
   if (fresh) {
     return {
       lead: 'Nothing is slipping yet.',
-      detail: `${goal.name} just hasn't been started — the first entry is the one that matters`,
+      detail: `${goal.name} just hasn't been started, the first entry is the one that matters`,
       driver: 'fresh',
     }
   }
