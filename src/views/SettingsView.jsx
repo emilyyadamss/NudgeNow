@@ -17,7 +17,7 @@ function Row({ title, sub, children }) {
 
 export default function SettingsView({
   settings, setSettings, state, ranked,
-  onImport, onLoadSample, onClearAll, toast,
+  onImport, onLoadSample, onClearAll, toast, email, onSignOut,
 }) {
   const fileRef = useRef(null)
   const [confirmClear, setConfirmClear] = useState(false)
@@ -33,6 +33,16 @@ export default function SettingsView({
       </div>
 
       <div className="stack" style={{ maxWidth: 720 }}>
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <div className="card-title">Account</div>
+              <div className="card-sub">Signed in as {email}</div>
+            </div>
+            <button className="btn btn-ghost" onClick={onSignOut}>Sign out</button>
+          </div>
+        </div>
+
         <div className="card">
           <div className="card-head"><div className="card-title">The nudge</div></div>
 
@@ -143,7 +153,7 @@ export default function SettingsView({
             <div>
               <div className="card-title">Your data</div>
               <div className="card-sub">
-                {state.goals.length} goals · {state.entries.length} entries · stored only in this browser
+                {state.goals.length} goals · {state.entries.length} entries · synced to your account
               </div>
             </div>
           </div>
@@ -197,8 +207,8 @@ export default function SettingsView({
           </div>
 
           <p className="hint" style={{ marginTop: 12 }}>
-            Nothing leaves this device. Export a backup before clearing your browser data, that
-            is the only copy.
+            Your goals live in your Supabase account and follow you across devices. Export a
+            backup anyway before clearing data — it's the only way back if you change your mind.
           </p>
         </div>
       </div>

@@ -8,7 +8,13 @@ import GoalEditor from './components/GoalEditor.jsx'
 import MobileNav from './components/MobileNav.jsx'
 import LogModal from './components/LogModal.jsx'
 import CompleteModal from './components/CompleteModal.jsx'
-import { load, save } from './lib/storage.js'
+import AuthScreen from './components/AuthScreen.jsx'
+import Loader from './components/Loader.jsx'
+import { supabase } from './lib/supabaseClient.js'
+import {
+  fetchState, putGoal, removeGoal, putEntry, removeEntry, putTask, removeTask,
+  putSettings, replaceData, replaceAll,
+} from './lib/db.js'
 import { buildSample } from './lib/sample.js'
 import {
   colorVar, newGoal, newEntry, newTask, indexTasks, reopenTask, unitFor, formatAmount, unitWord,
@@ -26,8 +32,13 @@ import homeIconLight from './assets/home-light.png'
 import settingsIcon from './assets/settings.png'
 import settingsIconLight from './assets/settings-light.png'
 
+const EMPTY_STATE = { goals: [], entries: [], tasks: [], settings: { ...DEFAULT_SETTINGS } }
+
 export default function App() {
-  const [state, setState] = useState(load)
+  // undefined = auth not checked yet, null = signed out, object = signed in.
+  const [session, setSession] = useState(undefined)
+  const [state, setState] = useState(EMPTY_STATE)
+  const [dataLoading, setDataLoading] = useState(false)
   const [view, setView] = useState({ name: 'dashboard' })
   const [editing, setEditing] = useState(null)     // { goal, isNew }
   const [logging, setLogging] = useState(null)     // { goalId, date }
@@ -39,16 +50,14 @@ export default function App() {
   const { goals, entries, settings } = state
   // Older saves (and backups written before task lists existed) simply have none.
   const tasks = state.tasks || []
+  const userId = session?.user?.id ?? null
 
-  /* ------------------------------------------------------------ persistence */
-  useEffect(() => { save(state) }, [state])
-
-  /* ----------------------------------------------------------------- theme */
+  /* ------------------------------------------------------------------ auth */
   useEffect(() => {
-    const root = document.documentElement
-    if (settings.theme === 'system') root.removeAttribute('data-theme')
-    else root.setAttribute('data-theme', settings.theme)
-  }, [settings.theme])
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => setSession(sess))
+    return () => sub.subscription.unsubscribe()
+  }, [])
 
   /* ---------------------------------------------------------------- toasts */
   const toast = useCallback((message) => {
@@ -56,6 +65,25 @@ export default function App() {
     setToasts((t) => [...t, { id, message }])
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600)
   }, [])
+
+  /* --------------------------------------------------------- load from db */
+  useEffect(() => {
+    if (!userId) { setState(EMPTY_STATE); return }
+    let cancelled = false
+    setDataLoading(true)
+    fetchState(userId)
+      .then((next) => { if (!cancelled) setState(next) })
+      .catch(() => { if (!cancelled) toast('Could not load your data') })
+      .finally(() => { if (!cancelled) setDataLoading(false) })
+    return () => { cancelled = true }
+  }, [userId, toast])
+
+  /* ----------------------------------------------------------------- theme */
+  useEffect(() => {
+    const root = document.documentElement
+    if (settings.theme === 'system') root.removeAttribute('data-theme')
+    else root.setAttribute('data-theme', settings.theme)
+  }, [settings.theme])
 
   /* ------------------------------------------------------------- derived */
   const byGoal = useMemo(() => indexEntries(entries), [entries])
@@ -79,18 +107,28 @@ export default function App() {
   const pick = cycle > 0 && ranked.length > 0 ? ranked[cycle % ranked.length] : top
 
   /* ------------------------------------------------------------- mutations */
+  const syncFail = useCallback((message) => (err) => {
+    console.error(err)
+    toast(message)
+  }, [toast])
+
   const setSettings = useCallback((patch) => {
-    setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }))
-  }, [])
+    setState((s) => {
+      const next = { ...s.settings, ...patch }
+      putSettings(userId, next).catch(syncFail('Could not save settings'))
+      return { ...s, settings: next }
+    })
+  }, [userId, syncFail])
 
   const saveGoal = useCallback((goal) => {
     setState((s) => {
       const exists = s.goals.some((g) => g.id === goal.id)
       return { ...s, goals: exists ? s.goals.map((g) => (g.id === goal.id ? goal : g)) : [...s.goals, goal] }
     })
+    putGoal(userId, goal).catch(syncFail('Could not save that goal'))
     setEditing(null)
     toast(`Saved ${goal.name}`)
-  }, [toast])
+  }, [userId, syncFail, toast])
 
   const deleteGoal = useCallback((id) => {
     setState((s) => ({
@@ -99,45 +137,55 @@ export default function App() {
       entries: s.entries.filter((e) => e.goalId !== id),
       tasks: (s.tasks || []).filter((t) => t.goalId !== id),
     }))
+    // The goals row cascades to its entries and tasks in the database.
+    removeGoal(id).catch(syncFail('Could not delete that goal'))
     setEditing(null)
     setView({ name: 'dashboard' })
     toast('Goal deleted')
-  }, [toast])
+  }, [syncFail, toast])
 
   /* Completing a goal is one decision with two endings: file it away, or keep
      it in revisit so it still gets tapped on a long interval. Either way the
      goal and its entries stay exactly as they were. */
   const finishGoal = useCallback((id, { status, revisitEvery }) => {
     let name = ''
+    let updated = null
     setState((s) => ({
       ...s,
       goals: s.goals.map((g) => {
         if (g.id !== id) return g
         name = g.name
-        return withStatus(g, status, { revisitEvery })
+        updated = withStatus(g, status, { revisitEvery })
+        return updated
       }),
     }))
+    if (updated) putGoal(userId, updated).catch(syncFail('Could not save that change'))
     setFinishing(null)
     toast(status === STATUS.REVISIT
       ? `${name} moved to revisit, ${revisitLabel(revisitEvery).toLowerCase()}`
       : `${name} archived`)
-  }, [toast])
+  }, [userId, syncFail, toast])
 
   const reactivateGoal = useCallback((id) => {
     let name = ''
+    let updated = null
     setState((s) => ({
       ...s,
       goals: s.goals.map((g) => {
         if (g.id !== id) return g
         name = g.name
-        return withStatus(g, STATUS.ACTIVE)
+        updated = withStatus(g, STATUS.ACTIVE)
+        return updated
       }),
     }))
+    if (updated) putGoal(userId, updated).catch(syncFail('Could not save that change'))
     toast(`${name} is active again`)
-  }, [toast])
+  }, [userId, syncFail, toast])
 
   const addEntry = useCallback(({ goalId, date, amount, note }) => {
-    setState((s) => ({ ...s, entries: [...s.entries, newEntry(goalId, date, amount, note)] }))
+    const entry = newEntry(goalId, date, amount, note)
+    setState((s) => ({ ...s, entries: [...s.entries, entry] }))
+    putEntry(userId, entry).catch(syncFail('Could not save that entry'))
     setLogging(null)
     setCycle(0)
     const g = goals.find((x) => x.id === goalId)
@@ -145,13 +193,15 @@ export default function App() {
       const u = unitFor(g)
       toast(`Logged ${formatAmount(amount, u)} ${unitWord(amount, u)} of ${g.name}`)
     }
-  }, [goals, toast])
+  }, [goals, userId, syncFail, toast])
 
   /* Deleting an entry that came from a ticked-off step reopens that step —
      otherwise the checkbox would claim credit for progress no longer there. */
   const deleteEntry = useCallback((id) => {
+    let reopened = null
     setState((s) => {
       const entry = s.entries.find((e) => e.id === id)
+      reopened = entry?.taskId ? reopenTask((s.tasks || []).find((t) => t.id === entry.taskId)) : null
       return {
         ...s,
         entries: s.entries.filter((e) => e.id !== id),
@@ -160,8 +210,10 @@ export default function App() {
           : s.tasks || [],
       }
     })
+    removeEntry(id).catch(syncFail('Could not remove that entry'))
+    if (reopened) putTask(userId, reopened).catch(syncFail('Could not update that step'))
     toast('Entry removed')
-  }, [toast])
+  }, [userId, syncFail, toast])
 
   /* ----------------------------------------------------------------- tasks */
 
@@ -169,9 +221,11 @@ export default function App() {
     setState((s) => {
       const list = s.tasks || []
       const order = list.filter((t) => t.goalId === goalId).length
-      return { ...s, tasks: [...list, newTask(goalId, title, amount, order)] }
+      const task = newTask(goalId, title, amount, order)
+      putTask(userId, task).catch(syncFail('Could not save that step'))
+      return { ...s, tasks: [...list, task] }
     })
-  }, [])
+  }, [userId, syncFail])
 
   /* Ticking a step off is just logging: it writes an ordinary entry for today,
      stamped with the step that produced it. Unticking deletes exactly that
@@ -184,29 +238,35 @@ export default function App() {
       if (!task) return s
       if (task.done) {
         message = `“${task.title}” is open again`
+        const reopened = reopenTask(task)
+        putTask(userId, reopened).catch(syncFail('Could not update that step'))
+        if (task.entryId) removeEntry(task.entryId).catch(syncFail('Could not remove that entry'))
         return {
           ...s,
           entries: task.entryId ? s.entries.filter((e) => e.id !== task.entryId) : s.entries,
-          tasks: s.tasks.map((t) => (t.id === id ? reopenTask(t) : t)),
+          tasks: s.tasks.map((t) => (t.id === id ? reopened : t)),
         }
       }
       const goal = s.goals.find((g) => g.id === task.goalId)
       const worth = Math.max(0, Number(task.amount) || 0)
       const entry = worth > 0 ? newEntry(task.goalId, todayKey(), worth, task.title, task.id) : null
+      const updatedTask = {
+        ...task, done: true, entryId: entry?.id || null, completedAt: new Date().toISOString(),
+      }
       message = entry && goal
         ? `“${task.title}” done, ${withUnit(worth, unitFor(goal))} on ${goal.name}`
         : `“${task.title}” done`
+      if (entry) putEntry(userId, entry).catch(syncFail('Could not save that entry'))
+      putTask(userId, updatedTask).catch(syncFail('Could not update that step'))
       return {
         ...s,
         entries: entry ? [...s.entries, entry] : s.entries,
-        tasks: s.tasks.map((t) => (t.id === id
-          ? { ...t, done: true, entryId: entry?.id || null, completedAt: new Date().toISOString() }
-          : t)),
+        tasks: s.tasks.map((t) => (t.id === id ? updatedTask : t)),
       }
     })
     setCycle(0)
     if (message) toast(message)
-  }, [toast])
+  }, [userId, syncFail, toast])
 
   /* Deleting a finished step keeps the entry it logged. The work happened;
      only the to-do item goes. */
@@ -215,6 +275,10 @@ export default function App() {
     setState((s) => {
       const task = (s.tasks || []).find((t) => t.id === id)
       logged = !!task?.entryId
+      if (task?.entryId) {
+        const entry = s.entries.find((e) => e.id === task.entryId)
+        if (entry) putEntry(userId, { ...entry, taskId: null }).catch(syncFail('Could not update that entry'))
+      }
       return {
         ...s,
         tasks: (s.tasks || []).filter((t) => t.id !== id),
@@ -223,8 +287,9 @@ export default function App() {
           : s.entries,
       }
     })
+    removeTask(id).catch(syncFail('Could not remove that step'))
     toast(logged ? 'Step removed. The progress it logged stays' : 'Step removed')
-  }, [toast])
+  }, [userId, syncFail, toast])
 
   const openNewGoal = useCallback(() => {
     setEditing({ goal: newGoal(goals.length), isNew: true })
@@ -233,9 +298,10 @@ export default function App() {
   const loadSample = useCallback(() => {
     const { goals: g, entries: e, tasks: t } = buildSample()
     setState((s) => ({ ...s, goals: g, entries: e, tasks: t }))
+    replaceData(userId, { goals: g, entries: e, tasks: t }).catch(syncFail('Could not save sample data'))
     setView({ name: 'dashboard' })
     toast('Sample data loaded')
-  }, [toast])
+  }, [userId, syncFail, toast])
 
   const openLog = useCallback((goalId, date) => {
     if (loggable.length === 0) { openNewGoal(); return }
@@ -261,6 +327,16 @@ export default function App() {
   }, [editing, logging, finishing, view, openNewGoal, openLog])
 
   const currentGoal = view.name === 'goal' ? goals.find((g) => g.id === view.goalId) : null
+
+  if (session === undefined) {
+    return <div className="auth-screen"><Loader /></div>
+  }
+  if (!session) {
+    return <AuthScreen />
+  }
+  if (dataLoading) {
+    return <div className="auth-screen"><Loader label="Loading your goals…" /></div>
+  }
 
   return (
     <div className="app">
@@ -515,10 +591,20 @@ export default function App() {
             state={state}
             ranked={ranked}
             toast={toast}
-            onImport={(next) => { setState(next); toast('Backup restored'); setView({ name: 'dashboard' }) }}
+            email={session.user.email}
+            onSignOut={() => supabase.auth.signOut()}
+            onImport={(next) => {
+              setState(next)
+              replaceAll(userId, next).catch(syncFail('Restored locally, but the cloud sync failed'))
+              toast('Backup restored')
+              setView({ name: 'dashboard' })
+            }}
             onLoadSample={loadSample}
             onClearAll={() => {
-              setState({ goals: [], entries: [], tasks: [], settings: { ...DEFAULT_SETTINGS, theme: settings.theme } })
+              const next = { goals: [], entries: [], tasks: [], settings: { ...DEFAULT_SETTINGS, theme: settings.theme } }
+              setState(next)
+              replaceData(userId, { goals: [], entries: [], tasks: [] }).catch(syncFail('Could not clear cloud data'))
+              putSettings(userId, next.settings).catch(syncFail('Could not clear cloud data'))
               setView({ name: 'dashboard' })
               toast('All data cleared')
             }}

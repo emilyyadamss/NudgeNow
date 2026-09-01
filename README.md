@@ -7,12 +7,17 @@ not just be told it.
 
 ```bash
 npm install
+cp .env.example .env   # then fill in your Supabase project URL + anon key
 npm run dev
 ```
 
-Everything is stored in your browser's `localStorage`. No account, no server,
-nothing leaves the machine. Settings → **Export backup** writes a JSON file you
-can re-import later.
+Your goals live in your own Supabase account and follow you across devices —
+sign up with email or a magic link, and everything you log is scoped to you
+alone via row level security. Settings → **Export backup** writes a JSON file
+you can re-import later, and **Sign out** is in Settings → Account.
+
+See [`supabase/schema.sql`](supabase/schema.sql) for the tables/policies to run
+once in your Supabase project's SQL editor before first use.
 
 First run is empty. Settings → **Load sample data** fills it with five plausible
 goals, six months of history, and a few starter steps if you'd rather see the
@@ -179,15 +184,20 @@ Goals with no category collect under *Uncategorised*, always sorted last.
 ```
 src/
   lib/
-    date.js      local-date helpers, week/month bucketing
-    model.js     goal, entry & task shapes, lifecycle, unit presets, colour slots
-    stats.js     streaks, rolling totals, per-period series, balance, task totals
-    nudge.js     the scoring engine
-    chart.js     axis ticks, mark paths, resize hook
-    storage.js   localStorage + export/import
-    sample.js    the demo dataset
-  components/    Heatmap, ProgressChart, BalanceBars, Sparkline, TaskList, cards, modals
+    date.js            local-date helpers, week/month bucketing
+    model.js            goal, entry & task shapes, lifecycle, unit presets, colour slots
+    stats.js            streaks, rolling totals, per-period series, balance, task totals
+    nudge.js            the scoring engine
+    chart.js            axis ticks, mark paths, resize hook
+    supabaseClient.js   the Supabase client, built from VITE_SUPABASE_URL / _ANON_KEY
+    db.js               per-user reads/writes against Supabase
+    storage.js          JSON backup export/import
+    sample.js           the demo dataset
+  components/    Heatmap, ProgressChart, BalanceBars, Sparkline, TaskList, AuthScreen, cards, modals
   views/         Dashboard, GoalDetail, ArchiveView, SettingsView
+
+supabase/
+  schema.sql     tables + row level security policies — run once per project
 ```
 
 Charts are hand-drawn SVG — no charting dependency. The eight goal colours are a

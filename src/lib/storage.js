@@ -1,43 +1,9 @@
-/* localStorage persistence. Everything lives on this machine — no account,
-   no network. Export/import gives you a portable JSON backup.
-   Storage key stays 'nudgenow:v1' (the app's former name) so existing
-   users' saved data isn't orphaned by the rename to Compassed. */
+/* Backup export/import. State itself now lives in Supabase, scoped to the
+   signed-in account — see db.js. This file only handles the portable JSON
+   backup: Settings → Export backup writes one, Import backup reads one back
+   (via db.replaceAll, so a restore fully replaces the account's data). */
 
 import { DEFAULT_SETTINGS, migrateGoal, migrateTask } from './model.js'
-
-const KEY = 'nudgenow:v1'
-
-const EMPTY = { goals: [], entries: [], tasks: [], settings: { ...DEFAULT_SETTINGS } }
-
-export function load() {
-  try {
-    const raw = localStorage.getItem(KEY)
-    if (!raw) return { ...EMPTY }
-    const parsed = JSON.parse(raw)
-    return {
-      goals: Array.isArray(parsed.goals) ? parsed.goals.map(migrateGoal) : [],
-      entries: Array.isArray(parsed.entries) ? parsed.entries : [],
-      tasks: Array.isArray(parsed.tasks) ? parsed.tasks.map(migrateTask) : [],
-      settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
-    }
-  } catch {
-    return { ...EMPTY }
-  }
-}
-
-export function save(state) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify({
-      goals: state.goals,
-      entries: state.entries,
-      tasks: state.tasks || [],
-      settings: state.settings,
-    }))
-    return true
-  } catch {
-    return false
-  }
-}
 
 export function exportJSON(state) {
   return JSON.stringify(
