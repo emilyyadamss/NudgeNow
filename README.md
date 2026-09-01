@@ -1,4 +1,4 @@
-# NudgeNow
+# Compassed
 
 A goal tracker built around one problem: you fall into one goal and forget the
 others. NudgeNow watches which goals go quiet, and each day points you at the one
@@ -18,7 +18,7 @@ First run is empty. Settings → **Load sample data** fills it with five plausib
 goals, six months of history, and a few starter steps if you'd rather see the
 charts before typing anything in.
 
-## How the nudge decides
+## How the compassed decides
 
 Two independent signals per goal, blended by a slider in Settings:
 
