@@ -75,7 +75,7 @@ export default function SettingsView({
           {confirmDelete && (
             <p className="hint" style={{ marginTop: 12, color: 'var(--error-text)' }}>
               This permanently deletes your account and all {state.goals.length} goals and{' '}
-              {state.entries.length} entries. There's no undo — export a backup first if you want one.
+              {state.entries.length} entries. There's no undo! Export a backup first if you want one.
             </p>
           )}
         </div>
@@ -244,8 +244,8 @@ export default function SettingsView({
           </div>
 
           <p className="hint" style={{ marginTop: 12 }}>
-            Your goals live in your Supabase account and follow you across devices. Export a
-            backup anyway before clearing data — it's the only way back if you change your mind.
+            Your goals live in your account and follow you across devices. Export a
+            backup anyway before clearing data, it's the only way back if you change your mind.
           </p>
         </div>
       </div>
