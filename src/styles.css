@@ -276,12 +276,22 @@ a { color: var(--accent); }
 :root[data-theme="dark"] .brand-mark .logo-for-dark { display: block; }
 
 .nav-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-muted);
   padding: 14px 10px 6px;
+}
+
+.dropdown-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
 }
 
 .nav-item {
@@ -297,7 +307,7 @@ a { color: var(--accent); }
   transition: background-color 160ms var(--ease), color 160ms var(--ease);
   border-left: 1px solid transparent;
 }
-.nav-item:hover { background: var(--surface-2); color: var(--text-primary); }
+.nav-item:hover, .dropdown-btn:hover { background: var(--surface-2); color: var(--text-primary); }
 .nav-item[aria-current="true"] {
   background: color-mix(in oklab, var(--goal-color, var(--accent-tint)) 12%, transparent);
   border-left-color: var(--goal-color, var(--accent-tint));

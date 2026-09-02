@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import Dashboard from './views/Dashboard.jsx'
 import GoalDetail from './views/GoalDetail.jsx'
 import SettingsView from './views/SettingsView.jsx'
@@ -49,6 +50,17 @@ export default function App() {
   const [cycle, setCycle] = useState(0)
   const [toasts, setToasts] = useState([])
   const toastId = useRef(0)
+  const [collapsedCategories, setCollapsedCategories] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('collapsedCategories')) || {}
+    } catch {
+      return {}
+    }
+  })
+
+  useEffect(() => {
+    localStorage.setItem('collapsedCategories', JSON.stringify(collapsedCategories))
+  }, [collapsedCategories])
 
   const { goals, entries, settings } = state
   // Older saves (and backups written before task lists existed) simply have none.
@@ -402,28 +414,40 @@ export default function App() {
           <span className="nav-meta">A</span>
         </button>
 
-        {navGroups.map(([category, items]) => (
-          <div key={category || '_none'} style={{ display: 'contents' }}>
-            <div className="nav-label">
-              {navGroups.length === 1 && !category ? 'Goals' : categoryLabel(category)}
+        {navGroups.map(([category, items]) => {
+          const key = category || '_none'
+          const collapsed = !!collapsedCategories[key]
+          return (
+            <div key={key} style={{ display: 'contents' }}>
+              <div className="nav-label">
+                {navGroups.length === 1 && !category ? 'Goals' : categoryLabel(category)}
+                <button
+                  className="dropdown-btn"
+                  aria-expanded={!collapsed}
+                  aria-label={collapsed ? 'Expand category' : 'Collapse category'}
+                  onClick={() => setCollapsedCategories((prev) => ({ ...prev, [key]: !prev[key] }))}
+                >
+                  <ChevronDown size={16} style={{ transform: collapsed ? 'rotate(-90deg)' : 'none' }} />
+                </button>
+              </div>
+              {!collapsed && items.map(({ goal, stats }) => (
+                <button
+                  key={goal.id}
+                  className="nav-item"
+                  style={{ '--goal-color': colorVar(goal.colorSlot) }}
+                  aria-current={view.name === 'goal' && view.goalId === goal.id}
+                  onClick={() => setView({ name: 'goal', goalId: goal.id })}
+                >
+                  <span className="dot" />
+                  <span className="nav-name">{goal.name}</span>
+                  <span className="nav-meta">
+                    {stats.daysSince == null ? '—' : stats.daysSince === 0 ? 'today' : `${stats.daysSince}d`}
+                  </span>
+                </button>
+              ))}
             </div>
-            {items.map(({ goal, stats }) => (
-              <button
-                key={goal.id}
-                className="nav-item"
-                style={{ '--goal-color': colorVar(goal.colorSlot) }}
-                aria-current={view.name === 'goal' && view.goalId === goal.id}
-                onClick={() => setView({ name: 'goal', goalId: goal.id })}
-              >
-                <span className="dot" />
-                <span className="nav-name">{goal.name}</span>
-                <span className="nav-meta">
-                  {stats.daysSince == null ? '—' : stats.daysSince === 0 ? 'today' : `${stats.daysSince}d`}
-                </span>
-              </button>
-            ))}
-          </div>
-        ))}
+          )
+        })}
 
         {rankedRevisit.length > 0 && (
           <>
